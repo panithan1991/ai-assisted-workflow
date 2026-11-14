@@ -1,0 +1,25 @@
+name: Check blueprint
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate examples and documentation links
+        run: python tools/check_blueprint.py
+      - name: Check workflow invariants
+        run: python -m unittest discover -s tests -v
+      - name: Replay fictional assignment lifecycle
+        run: python tools/demo_workflow.py

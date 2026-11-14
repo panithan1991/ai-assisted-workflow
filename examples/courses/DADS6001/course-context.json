@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "kind": "course",
+  "id": "DADS6001",
+  "current_lesson": {
+    "topic": "Statistical simulation",
+    "source": "https://example.org/course/material"
+  },
+  "assignments": [],
+  "environment_ids": [],
+  "next_actions": [
+    "Replace this fictional example with the current confirmed lesson."
+  ]
+}

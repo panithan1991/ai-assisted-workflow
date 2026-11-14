@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "kind": "project",
+  "project_id": "transaction-demo",
+  "course_id": "DADS6003",
+  "status": "awaiting_user_round_selection",
+  "fictional_example": true,
+  "local_only": true,
+  "remote_upload_authorized": false,
+  "must_explain_options_before_each_run": true,
+  "must_wait_for_user_round_selection": true,
+  "requirements": {
+    "problem": "Fictional exercise: estimate the probability of a rare event.",
+    "data_available": false
+  },
+  "execution_history": {"local_model_runs_completed": 0},
+  "next_actions": ["Explain alternatives and wait for the learner to choose before any future run."]
+}

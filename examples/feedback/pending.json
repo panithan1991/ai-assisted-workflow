@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "kind": "feedback_record",
+  "fictional_example": true,
+  "delivery": {
+    "delivery_id": "fictional-report-v1",
+    "task_id": "report-demo",
+    "requirements_revision": 1,
+    "artifact_revision": 1,
+    "requirements_sha256": "d988a5eb40438d4ac2ce77217ff1750e94753a939b35dfb478325cbd553e99fb",
+    "artifacts": [],
+    "content_sha256": "d0afb4445850c725d76706819b6572efa80ec636a5f6dd615395b58ea914e3c6"
+  },
+  "delivery_sha256": "51cc143e415346988c9f4426d2e50ef44e85bdb2eb176b62e55dd462bcecccef",
+  "objective_verification": {
+    "status": "not_checked",
+    "evidence": []
+  },
+  "feedback": {
+    "status": "pending",
+    "response": null
+  }
+}

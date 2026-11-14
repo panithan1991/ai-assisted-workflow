@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "kind": "assignment",
+  "id": "nn-homework-demo",
+  "course_id": "DADS6003",
+  "status": "in_progress",
+  "requirements_revision": 2,
+  "artifact_revision": 1,
+  "current_requirements": {
+    "derivative_weights": 3,
+    "decimal_places": 4,
+    "language": "th",
+    "output_format": "pdf",
+    "explanation": "Show the three selected weights; keep explanations concise and define variables."
+  },
+  "sources": [
+    {
+      "id": "assignment-demo",
+      "type": "fictional_example",
+      "reference": "https://example.org/course/nn-homework",
+      "note": "Public example only; not a real student's submission."
+    }
+  ],
+  "artifacts": [],
+  "verification": {
+    "passed": false,
+    "requirements_revision": null,
+    "artifact_revision": null,
+    "requirements_sha256": null,
+    "evidence": []
+  },
+  "submission": null,
+  "history": "history.json",
+  "next_actions": [
+    "Compute the selected derivatives.",
+    "Create and verify a PDF before setting ready_to_submit."
+  ]
+}

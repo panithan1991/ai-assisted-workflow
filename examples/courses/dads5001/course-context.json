@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "kind": "course",
+  "id": "dads5001",
+  "current_lesson": {
+    "topic": "MongoDB and dashboards",
+    "source": "https://example.org/course/material"
+  },
+  "assignments": [],
+  "environment_ids": [
+    "mongodb-lab"
+  ],
+  "next_actions": [
+    "Replace this fictional example with the current confirmed lesson."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "kind": "environment_registry",
+  "environments": [
+    {
+      "id": "colab-classroom",
+      "type": "colab",
+      "location": "cloud",
+      "verified": false,
+      "is_cuda_available": null,
+      "evidence": null
+    },
+    {
+      "id": "dads6003-pytorch",
+      "type": "local_python",
+      "interpreter": "<set-in-private-local-configuration>",
+      "verified": false,
+      "is_cuda_available": null,
+      "evidence": null
+    },
+    {
+      "id": "mongodb-lab",
+      "type": "docker",
+      "service": "<set-in-private-local-configuration>",
+      "verified": false,
+      "evidence": null
+    }
+  ],
+  "policy": {
+    "local_execution": "Use the explicit interpreter or registered kernel for this task; do not infer from PATH.",
+    "credentials": "Keep real connection settings in private configuration."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "kind": "source_registry",
+  "fictional_example": true,
+  "sources": [
+    {"type": "fictional_reference", "url": "https://example.org/transaction-exercise"}
+  ],
+  "downloaded_files": []
+}

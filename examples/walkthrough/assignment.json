@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "kind": "assignment",
+  "id": "report-demo",
+  "course_id": "DEMO101",
+  "status": "in_progress",
+  "requirements_revision": 1,
+  "artifact_revision": 1,
+  "current_requirements": {
+    "sections": ["Question", "Method", "Conclusion"],
+    "output_format": "text",
+    "language": "en"
+  },
+  "sources": [
+    {"type": "fictional_example", "reference": "https://example.org/report-exercise"}
+  ],
+  "artifacts": [],
+  "verification": {
+    "passed": false,
+    "requirements_revision": null,
+    "artifact_revision": null,
+    "requirements_sha256": null,
+    "evidence": []
+  },
+  "submission": null,
+  "next_actions": ["Write a fictional report and simulate a review."]
+}

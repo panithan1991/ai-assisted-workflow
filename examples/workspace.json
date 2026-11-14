@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "kind": "workspace",
+  "courses": [
+    {
+      "id": "DADS6001",
+      "context": "courses/DADS6001/course-context.json"
+    },
+    {
+      "id": "DADS6003",
+      "context": "courses/DADS6003/course-context.json"
+    },
+    {
+      "id": "dads5001",
+      "context": "courses/dads5001/course-context.json"
+    }
+  ],
+  "projects": [
+    {
+      "id": "transaction-demo",
+      "course_id": "DADS6003",
+      "path": "projects/transaction-demo",
+      "entry": "projects/transaction-demo/README.md",
+      "current_context": "projects/transaction-demo/project-context.json",
+      "instructions": "projects/transaction-demo/AGENTS.md",
+      "references": ["projects/transaction-demo/sources.json"]
+    }
+  ]
+}

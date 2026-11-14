@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "kind": "change_history",
+  "events": [
+    {
+      "revision": 1,
+      "field": "derivative_weights",
+      "value": 21,
+      "source": "fictional original assignment",
+      "superseded_by": 2
+    },
+    {
+      "revision": 2,
+      "field": "derivative_weights",
+      "value": 3,
+      "source": "fictional confirmed correction"
+    }
+  ]
+}

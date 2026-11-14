@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "kind": "course",
+  "id": "DADS6003",
+  "current_lesson": {
+    "topic": "Introduction to PyTorch",
+    "source": "https://example.org/course/material"
+  },
+  "assignments": [
+    {
+      "id": "nn-homework-demo",
+      "context": "Assignments/NN_homework/assignment-context.json"
+    }
+  ],
+  "environment_ids": [
+    "colab-classroom",
+    "dads6003-pytorch"
+  ],
+  "project_ids": ["transaction-demo"],
+  "next_actions": [
+    "Replace this fictional example with the current confirmed lesson."
+  ]
+}
