@@ -9,7 +9,7 @@
   "current_requirements": {
     "derivative_weights": 3,
     "decimal_places": 4,
-    "language": "th",
+    "language": "en",
     "output_format": "pdf",
     "explanation": "Show the three selected weights; keep explanations concise and define variables."
   },
@@ -34,5 +34,6 @@
   "next_actions": [
     "Compute the selected derivatives.",
     "Create and verify a PDF before setting ready_to_submit."
-  ]
+  ],
+  "fictional_example": true
 }

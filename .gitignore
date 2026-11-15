@@ -1,6 +1,10 @@
 # Machine-specific configuration and user data
 _local/
-_workspace/state/
+_workspace/
+.obsidian/
+.codex/
+raw/
+Clippings/
 feedback-private/
 .env
 .env.*

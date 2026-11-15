@@ -1,104 +1,111 @@
 # Workflows
 
-เริ่มจาก [ตัวอย่างทีละขั้นที่รันได้](walkthrough.md) หากต้องการเห็นการเปลี่ยนสถานะและกรณีที่ตัวตรวจปฏิเสธด้วยไฟล์สมมติ
+Start with the [runnable walkthrough](walkthrough.md) to see state changes and expected rejections using fictional files.
 
-## เรียนประจำวัน
+## Daily learning
 
-```mermaid
+~~~mermaid
 sequenceDiagram
-    participant U as ผู้เรียน
-    participant C as Codex
-    participant S as Context และต้นฉบับ
+    participant U as Learner
+    participant A as Assistant
+    participant S as Context and sources
     participant R as Runtime
-    U->>C: ระบุวิชา + ลิงก์/ภาพ/คำถาม
-    C->>S: อ่าน current lesson และต้นฉบับเฉพาะส่วน
-    C-->>U: อธิบายในระดับที่เรียนมา
-    opt ต้องทดลอง
-        C->>S: ทำสำเนาสำหรับทดลอง
-        C->>R: รันใน environment ที่เลือก
-        R-->>C: ผลลัพธ์/ข้อผิดพลาด
-        C-->>U: อธิบายผลและขอบเขตที่ตรวจแล้ว
+    U->>A: Course, source, and question
+    A->>S: Read current lesson and relevant source
+    A-->>U: Explain at the learner's current level
+    opt An experiment is needed and authorized
+        A->>S: Create a working copy
+        A->>R: Run in the selected environment
+        R-->>A: Result or error
+        A-->>U: Explain the result and verified limits
     end
-    C->>S: บันทึกบทล่าสุดและผลสำคัญตาม workflow ที่ตกลง
-```
+    A->>S: Save important context when appropriate
+~~~
 
-อินพุตที่เพียงพอ เช่น “วันนี้ DADS6003 ต่อเรื่อง Tensor ใน Notebook นี้” เมื่อมีเพียงคำถามอธิบาย ไม่ต้องติดตั้งแพ็กเกจ เปิดบริการ หรือรัน Notebook ทั้งเล่ม
+A request such as "Continue the tensor lesson in this notebook" is enough when course context is already known. A conceptual explanation does not require installing packages, starting services, or executing the entire notebook.
 
-ผลเก็บแยกเป็นต้นฉบับ สำเนาที่แก้ บันทึกความเข้าใจ และผลรัน ยึดลำดับบทที่ผู้เรียนยืนยัน ไม่เดาว่าเรียนจบแล้วจากการเห็นหัวข้อใน Notebook
+Keep original material, working copies, learning notes, and run outputs distinct. Follow the lesson progression the learner confirms; seeing a topic in a file does not establish that it has been completed or mastered.
 
-## ทำการบ้านและรายงาน
+## Assignments and reports
 
-```mermaid
+~~~mermaid
 stateDiagram-v2
     [*] --> inbox
-    inbox --> in_progress: ยืนยันโจทย์ปัจจุบัน
-    in_progress --> in_review: ได้ร่างพร้อมตรวจ
-    in_review --> in_progress: พบจุดที่ต้องแก้
-    in_review --> ready_to_submit: ตรวจรุ่นปัจจุบันผ่านและมีไฟล์
-    ready_to_submit --> in_progress: ข้อกำหนด/ผลงานเปลี่ยน
-    ready_to_submit --> submitted: มีหลักฐานส่งจริง
-    submitted --> in_progress: ต้องแก้หรือส่งใหม่
-    submitted --> archived: ปิดงาน
-```
+    inbox --> in_progress: Current task confirmed
+    in_progress --> in_review: Draft available
+    in_review --> in_progress: Revision needed
+    in_review --> ready_to_submit: Current files and evidence pass
+    ready_to_submit --> in_progress: Requirements or output change
+    ready_to_submit --> submitted: Actual submission evidence
+    submitted --> in_progress: Revision or resubmission needed
+    submitted --> archived: Work closed
+~~~
 
-### ลำดับการทำงาน
+1. **Capture the task.** Preserve originals, source references, and confirmed corrections.
+2. **Record current requirements.** Include the revision and task-specific criteria, such as page count, numerical precision, and calculation scope.
+3. **Do the work.** Create editable code or documents in the working area and record the runtime and inputs.
+4. **Verify.** Check relevant calculations, execution results, and document layout. Record JSON evidence bound to current requirements, revisions, and selected file hashes.
+5. **Select output.** Identify deliverable files and their checksums; retain the editable sources.
+6. **Deliver and invite feedback.** State what was checked and any material limits. For important work, offer optional feedback once for this version. Feedback does not establish technical validity; see the [feedback loop](feedback-loop.md).
+7. **Record actual submission.** Use `submitted` only after user confirmation with evidence, such as a receipt. A PDF or an acceptance response is insufficient.
 
-1. **รับโจทย์:** เก็บ original, source และวันที่ ระบุคำแก้ไขที่อาจารย์ยืนยันแล้ว
-2. **กำหนดงานปัจจุบัน:** บันทึก current_requirements พร้อม revision และเกณฑ์ตรวจ เช่น จำนวนหน้า ทศนิยม และขอบเขตการคำนวณ
-3. **ลงมือทำ:** สร้างโค้ดหรือเอกสารใน src/working ระบุ environment และข้อมูลเข้าที่ใช้
-4. **ตรวจ:** ตรวจการคำนวณ/ผลรัน และตรวจรูปแบบเอกสารตามงาน บันทึก JSON หลักฐานที่อ้างถึง requirements revision, artifact revision, hash ของข้อกำหนด และ hash ของไฟล์ที่ตรวจ
-5. **เลือกฉบับพร้อมส่ง:** เก็บไฟล์ใน submission ลงรายการไฟล์พร้อม checksum และบันทึกผลตรวจ
-6. **ส่งมอบและรับความเห็น:** สรุปสิ่งที่ตรวจแล้วและข้อจำกัด ถาม Feedback ครั้งเดียวต่อฉบับเมื่อเป็นงานสำคัญ ให้ข้ามได้ ไม่บังคับ Feedback เพื่อรับรองสถานะทางเทคนิค ดู [วงจร Feedback](feedback-loop.md)
-7. **ส่งจริง:** เปลี่ยนเป็น submitted หลังผู้เรียนยืนยันพร้อมหลักฐาน เช่น ใบตอบรับหรือข้อมูลการส่ง ไม่อนุมานจากการมี PDF หรือการตอบว่าใช้ได้
+## When requirements change
 
-## เมื่ออาจารย์แก้โจทย์
+For example, a reviewed report may gain a required Limitations section:
 
-ตัวอย่าง: จากคำนวณอนุพันธ์ 21 ตัว เป็น 3 ตัวบนสายที่กำหนด
+- Retain the previous instruction in history and increment `requirements_revision`.
+- Store the new requirement in `current_requirements`.
+- Record which earlier instruction it supersedes.
+- Do not use the earlier review as evidence for the new requirements.
+- Even if somebody misses the revision increment, a changed `requirements_sha256` reveals the mismatch.
+- Return stale `ready_to_submit` work to `in_progress`, revise it, and verify again.
 
-- เก็บข้อความเดิมใน history และเพิ่ม requirements revision
-- current_requirements เหลือข้อกำหนดปัจจุบัน 3 ตัว
-- บันทึกว่าข้อกำหนดใหม่นี้มาแทนข้อใด
-- ผลตรวจของ revision เก่าใช้รับรองฉบับปัจจุบันไม่ได้
-- หากลืมเพิ่ม revision แต่แก้เนื้อหาข้อกำหนดแล้ว ตัวตรวจยังพบจาก requirements_sha256 ที่ไม่ตรง
-- ถ้าเคย ready_to_submit ให้กลับ in_progress แล้วทำและตรวจใหม่
+Update current state and history together rather than asking an assistant to infer the newest instruction from a long conversation.
 
-ไม่ใช้การอ่านข้อความเก่าแล้วเดาว่าคำสั่งใดใหม่กว่า เมื่อแก้ข้อกำหนด ให้ปรับ current state กับ history ในชุดงานเดียวกัน
+The checker reports inconsistencies without rewriting state. The user or responsible tool must make the state change and perform the revision and review.
 
-ตัวตรวจรายงานความไม่สอดคล้องแบบอ่านอย่างเดียว ไม่เขียนสถานะกลับให้เอง ผู้ใช้หรือเครื่องมือที่รับผิดชอบต้องเปลี่ยนสถานะกลับ in_progress และทำงานกับตรวจใหม่
+## Resume a task
 
-## กลับมาทำงานต่อ
+Read only what the request needs:
 
-อ่านเฉพาะ:
-1. workspace index เพื่อหาที่อยู่
-2. คำแนะนำวิชาและ course context
-3. assignment context เมื่อเป็นงานส่ง
-4. current_requirements, artifact revision, หลักฐานตรวจ และงานที่ยังค้าง
-5. original/source เฉพาะที่ต้องตรวจยืนยัน
+1. The workspace index to locate the task.
+2. Applicable instructions and course or project context.
+3. The assignment record for a deliverable.
+4. Current requirements, selected artifacts, verification, and remaining actions.
+5. Original sources needed to confirm a fact.
 
-หากข้อมูลกำกับขัดกัน ให้ใช้คำสั่งปัจจุบันของผู้เรียนและหลักฐานคำแก้ไขที่ยืนยันแล้วแก้ current state ก่อนทำงานต่อ ไม่ใช้ประวัติทั้งแชตแทนข้อกำหนดปัจจุบัน
+If records conflict, resolve them using the current user instruction and confirmed source evidence before proceeding. Historical chat should not replace the authoritative current record.
 
-## เลือกเครื่องมือและ runtime
+## Select a runtime
 
-| งาน | เส้นทางเริ่มต้นที่เสนอ |
+| Task | Suggested starting point |
 |---|---|
-| อธิบายบทเรียน | แชต + ต้นฉบับเฉพาะส่วน |
-| ทำตามอาจารย์ใน Colab | สำเนา Notebook ใน Colab |
-| ทดลอง local | environment ที่ระบุและตรวจ import/ตัวอย่างขั้นต่ำ |
-| ฐานข้อมูลทดลอง | Docker หรือ Atlas ตามโจทย์ แยกข้อมูลตัวอย่าง |
-| รายงานสูตรและกราฟ | source ที่แก้ได้ → LaTeX → PDF → ตรวจหน้า |
-| ค้นหลายเอกสาร | เลือกเอกสารเข้าระบบค้น แล้วเปิดต้นฉบับยืนยันข้อความ |
-| งานวิจัยอัตโนมัติ | โครงการ AI Scientist แยก พร้อมเป้าหมายและผลทดลอง |
+| Explain a concept | Conversation and the relevant source section |
+| Follow a hosted classroom notebook | A working copy in the selected cloud notebook |
+| Local experiment | Explicit environment and a minimal relevant check |
+| Database lab | Authorized local container or hosted database, using sample data |
+| Report with formulas and figures | Editable source, LaTeX/PDF generation, and page inspection |
+| Search several documents | A selected retrieval collection with links back to originals |
+| Research experiments | A separate project with an agreed plan and recorded results |
 
-การเลือกเส้นทางไม่ใช่การรับประกันว่า environment พร้อม ต้องตรวจสถานะของงานนั้น
+Choosing a route does not establish that its environment is ready. Verify the runtime needed for that task.
 
-## ส่งต่อระหว่างเครื่องมือ AI
+## Hand off between AI tools
 
-ผู้รับงานต้องได้รับ scope, current context, input paths, output path และ acceptance criteria จากผู้รับผิดชอบหลัก กำหนดผู้แก้ไฟล์หลักหนึ่งรายต่อช่วงงาน เมื่อส่งต่อให้บันทึกสิ่งที่เปลี่ยน ผลตรวจ และงานค้าง ก่อนอีกเครื่องมือเริ่มเขียนไฟล์เดียวกัน
+Provide the incoming tool with scope, authoritative context, input paths, output location, and acceptance criteria. Name a responsible writer for each edit batch. Before another tool writes the same files, record changes, actual checks, and remaining work, then hand over ownership.
 
-## แบ่งปันความรู้บน GitHub
+Applications retain their own authentication, permissions, and conversation history. File-based continuity works only when the relevant files have actually been saved and the receiving tool can read them.
 
-1. ใช้ repository สำหรับแบบแปลน/โค้ดตัวอย่างโดยเฉพาะ
-2. คัดเอกสารและตัวอย่างที่เผยแพร่ได้ โดยไม่คัด workspace ส่วนตัวทั้งชุด
-3. ตรวจ JSON ตัวอย่าง ลิงก์เอกสาร และ workflow tests
-4. เลือกชื่อ repository และ visibility; ชุด Blueprint นี้ใช้ [MIT License](../LICENSE) โดยตรวจขอบเขตสิทธิ์ของเนื้อหาที่จะรวมด้วย
-5. รีวิวชุดไฟล์ที่จะเผยแพร่ แล้วจึงสร้าง remote/push ตามคำสั่งเจ้าของงาน
+## Connect reusable knowledge
+
+A [shared knowledge vault](shared-knowledge.md) can hold sourced explanations and lessons that are useful across tasks. Keep current requirements and submission status in the owning project, and use notes to link concepts and source material.
+
+General questions do not require a new note, course selection, or feedback form.
+
+## Publish a reusable subset
+
+1. Use a dedicated repository for the Blueprint and examples.
+2. Select material that may be shared; do not copy an entire private workspace.
+3. Check example JSON, local documentation links, and workflow tests.
+4. Review rights and visibility. This Blueprint uses the [MIT License](../LICENSE).
+5. Review the exact file set, then publish only within the owner's instructions.

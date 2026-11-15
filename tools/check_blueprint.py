@@ -3,9 +3,11 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 STATES = {"inbox", "in_progress", "in_review", "ready_to_submit", "submitted", "archived"}
@@ -19,6 +21,23 @@ TRANSITIONS = {
 }
 READY_STATES = {"ready_to_submit", "submitted", "archived"}
 FEEDBACK_CHOICES = {"accepted", "adjust", "off_target"}
+
+
+def portable_relative_path(value: str) -> PurePosixPath:
+    """Reject platform-dependent aliases, streams and escaping path syntax."""
+    if not isinstance(value, str) or not value or "\\" in value:
+        raise ValueError("Use a nonempty portable relative path")
+    path = PurePosixPath(value)
+    if path.is_absolute() or path.as_posix() != value or not path.parts:
+        raise ValueError("Use a canonical portable relative path")
+    reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{n}" for n in range(1, 10)),
+                *(f"LPT{n}" for n in range(1, 10))}
+    for part in path.parts:
+        if (part in {".", ".."} or part.rstrip(" .") != part
+                or re.search(r'[<>:"|?*\x00-\x1f]', part)
+                or part.split(".", 1)[0].upper() in reserved):
+            raise ValueError("Path contains a nonportable or escaping component")
+    return path
 
 
 def should_offer_feedback(*, important: bool, delivered: bool,
@@ -61,9 +80,9 @@ def validate_feedback_record(doc: dict) -> list[str]:
                 errors.append("Invalid delivery artifact fingerprint")
                 continue
             path = artifact.get("path")
-            if (not isinstance(path, str) or not path or "\\" in path
-                    or path.startswith("/") or re.match(r"^[A-Za-z]:", path)
-                    or ".." in path.split("/")):
+            try:
+                portable_relative_path(path)
+            except ValueError:
                 errors.append("Delivery artifact path must be portable and relative")
         if not artifacts and not valid_hash(delivery.get("content_sha256")):
             errors.append("Inline delivery needs a content fingerprint")
@@ -103,14 +122,14 @@ def feedback_applies_to_delivery(doc: dict, current_delivery: dict) -> bool:
     """Old feedback remains history; no acceptance is copied to a new snapshot."""
     if validate_feedback_record(doc) or doc["feedback"]["status"] != "responded":
         return False
-    return doc["delivery_sha256"] == delivery_sha256(current_delivery)
+    try:
+        return isinstance(current_delivery, dict) and doc["delivery_sha256"] == delivery_sha256(current_delivery)
+    except (TypeError, ValueError):
+        return False
 
 def resolve_under(root: Path, relative: str) -> Path:
     """Only portable relative paths that resolve inside this root are allowed."""
-    if not isinstance(relative, str) or not relative or "\\" in relative:
-        raise ValueError("Use a nonempty portable relative path")
-    if relative.startswith("/") or re.match(r"^[A-Za-z]:", relative):
-        raise ValueError("Absolute machine paths do not belong in public examples")
+    portable_relative_path(relative)
     candidate = (root / relative).resolve()
     if not candidate.is_relative_to(root.resolve()):
         raise ValueError("Path escapes its declared root")
@@ -162,7 +181,7 @@ def validate_assignment(doc: dict, project_root: Path | None = None) -> list[str
         errors.append("verification must be an object")
         return errors
     state = doc["status"]
-    if state not in STATES:
+    if not isinstance(state, str) or state not in STATES:
         errors.append("Unknown workflow state")
         return errors
     if state in READY_STATES:
@@ -180,7 +199,7 @@ def validate_assignment(doc: dict, project_root: Path | None = None) -> list[str
             if verification.get("requirements_sha256") != requirements_hash:
                 errors.append("Requirements content changed after verification")
         for field in ("requirements_revision", "artifact_revision"):
-            if verification.get(field) != doc[field]:
+            if type(verification.get(field)) is not int or verification[field] != doc[field]:
                 errors.append(f"Verification is stale: {field}")
         evidence = verification.get("evidence")
         if not isinstance(evidence, list) or not evidence:
@@ -192,7 +211,7 @@ def validate_assignment(doc: dict, project_root: Path | None = None) -> list[str
             if not isinstance(artifact, dict):
                 errors.append("Artifact records must be objects")
                 continue
-            if artifact.get("revision") != doc["artifact_revision"]:
+            if type(artifact.get("revision")) is not int or artifact["revision"] != doc["artifact_revision"]:
                 errors.append("Artifact revision is stale")
             checksum = artifact.get("sha256", "")
             if not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum):
@@ -222,7 +241,7 @@ def validate_assignment(doc: dict, project_root: Path | None = None) -> list[str
                     if requirements_hash is None or report.get("requirements_sha256") != requirements_hash:
                         errors.append("Evidence bound to different requirements")
                     for field in ("requirements_revision", "artifact_revision"):
-                        if report.get(field) != doc[field]:
+                        if type(report.get(field)) is not int or report[field] != doc[field]:
                             errors.append(f"Evidence is stale: {field}")
                     if not isinstance(report.get("artifact_sha256"), str) or report["artifact_sha256"] not in artifact_hashes:
                         errors.append("Evidence bound to a different artifact")
@@ -245,6 +264,8 @@ def validate_assignment(doc: dict, project_root: Path | None = None) -> list[str
 def transition_errors(doc: dict, target: str,
                       project_root: Path | None = None) -> list[str]:
     """Validate a proposed transition; never write state or perform submission."""
+    if not isinstance(doc, dict) or not isinstance(doc.get("status"), str) or not isinstance(target, str):
+        return ["Transition requires string source and target states"]
     if target not in TRANSITIONS.get(doc.get("status"), set()):
         return [f"Transition not allowed: {doc.get('status')} -> {target}"]
     candidate = copy.deepcopy(doc)
@@ -252,7 +273,9 @@ def transition_errors(doc: dict, target: str,
     return validate_assignment(candidate, project_root)
 
 def read_json(path: Path) -> dict:
-    value = json.loads(path.read_text(encoding="utf-8-sig"))
+    def reject_constant(value):
+        raise ValueError(f"{path.name}: nonfinite JSON number {value} is not portable")
+    value = json.loads(path.read_text(encoding="utf-8-sig"), parse_constant=reject_constant)
     if not isinstance(value, dict):
         raise ValueError(f"{path.name}: expected object")
     return value
@@ -283,8 +306,128 @@ def validate_project(project: dict, workspace_root: Path) -> list[str]:
         errors.append(str(exc))
     return errors
 
-def check_repository(root: Path = ROOT) -> list[str]:
+
+def markdown_lines(text: str):
+    """Yield prose lines, excluding fenced code blocks."""
+    fence = None
+    for line in text.splitlines():
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+            continue
+        if fence is None:
+            yield line
+
+
+def markdown_targets(text: str):
+    """Read inline destinations and reference definitions, not code examples."""
+    for line in markdown_lines(text):
+        line = re.sub(r"(`+).*?\1", "", line)
+        for match in re.finditer(
+                r'!?\[[^\]\n]*\]\(\s*(?:<([^>\n]*)>|((?:[^()\s]|\([^()]*\))+))'
+                r'(?:\s+[\"\'][^\n]*?[\"\'])?\s*\)', line):
+            yield match.group(1) if match.group(1) is not None else match.group(2)
+        reference = re.match(r'^\s{0,3}\[[^\]]+\]:\s*(?:<([^>]+)>|(\S+))', line)
+        if reference:
+            yield reference.group(1) or reference.group(2)
+
+
+def markdown_anchors(text: str) -> set[str]:
+    """Resolve ordinary GitHub-style heading anchors and explicit HTML ids."""
+    anchors, counts = set(), {}
+    for line in markdown_lines(text):
+        anchors.update(re.findall(r'<a\s+[^>]*(?:id|name)=[\"\']([^\"\']+)', line, re.I))
+        heading = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$", line)
+        if not heading:
+            continue
+        title = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", heading.group(1))
+        title = re.sub(r"<[^>]*>", "", title).lower()
+        slug = re.sub(r"[^\w\-\s]", "", title)
+        slug = re.sub(r"\s", "-", slug)
+        suffix = counts.get(slug, 0)
+        counts[slug] = suffix + 1
+        anchors.add(slug if suffix == 0 else f"{slug}-{suffix}")
+    return anchors
+
+
+def check_markdown_links(root: Path, paths: list[Path]) -> list[str]:
     errors = []
+    for path in paths:
+        for target in markdown_targets(path.read_text(encoding="utf-8-sig")):
+            parsed = urlsplit(target)
+            if parsed.scheme in {"http", "https", "mailto"}:
+                continue
+            if parsed.scheme or parsed.netloc or parsed.path.startswith("/") or "\\" in parsed.path:
+                errors.append(f"{path.relative_to(root)}: nonportable local link {target}")
+                continue
+            candidate = (path.parent / unquote(parsed.path)).resolve() if parsed.path else path.resolve()
+            if not candidate.is_relative_to(root.resolve()) or not candidate.exists():
+                errors.append(f"{path.relative_to(root)}: broken local link {target}")
+            elif parsed.fragment and candidate.suffix.lower() == ".md":
+                if unquote(parsed.fragment) not in markdown_anchors(candidate.read_text(encoding="utf-8-sig")):
+                    errors.append(f"{path.relative_to(root)}: missing heading anchor {target}")
+    return errors
+
+
+def public_package_files(root: Path) -> tuple[list[Path], list[str]]:
+    """Check this text-only template package without reading private directories."""
+    paths, errors = [], []
+    ignored = {".git", "__pycache__", ".pytest_cache"}
+    private = {"_workspace", "_local", "private", "data", "models", "outputs", "raw", "clippings",
+               ".obsidian", ".codex", ".venv", "venv", "node_modules"}
+    extensions = {".md", ".json", ".py", ".yml", ".yaml", ".toml", ".txt"}
+    for directory, folders, files in os.walk(root, followlinks=False):
+        current = Path(directory)
+        keep = []
+        for name in folders:
+            path = current / name
+            if name in ignored:
+                continue
+            attributes = getattr(path.lstat(), "st_file_attributes", 0)
+            if path.is_symlink() or attributes & 0x400:
+                errors.append(f"{path.relative_to(root)}: linked directories cannot be published")
+            elif name.lower() in private:
+                errors.append(f"{path.relative_to(root)}: private/runtime directory is not a public template")
+            else:
+                keep.append(name)
+        folders[:] = keep
+        for name in files:
+            path = current / name
+            relative = path.relative_to(root)
+            lowered = name.lower()
+            if path.is_symlink() or getattr(path.lstat(), "st_file_attributes", 0) & 0x400:
+                errors.append(f"{relative}: linked files cannot be published")
+                continue
+            if ((lowered.startswith(".env") and lowered != ".env.example")
+                    or lowered in {"secrets.toml", "credentials.json", "desktop.ini", ".ds_store"}):
+                errors.append(f"{relative}: private configuration cannot be published")
+                continue
+            if path.suffix.lower() not in extensions and name not in {"LICENSE", ".gitignore", ".env.example"}:
+                errors.append(f"{relative}: unexpected file type in this text-only blueprint")
+                continue
+            if path.stat().st_size > 1024 * 1024:
+                errors.append(f"{relative}: unexpectedly large public text file")
+                continue
+            try:
+                text = path.read_text(encoding="utf-8-sig")
+            except UnicodeError:
+                errors.append(f"{relative}: public text must be UTF-8")
+                continue
+            if re.search(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", text):
+                errors.append(f"{relative}: private-key material detected")
+            if re.search(r"\b(?:sk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{24,}|github_pat_[A-Za-z0-9_]{30,})", text):
+                errors.append(f"{relative}: possible access token detected")
+            paths.append(path)
+    return paths, errors
+
+def check_repository(root: Path = ROOT) -> list[str]:
+    public_files, errors = public_package_files(root)
+    if errors:
+        return errors
     examples = root / "examples"
     for path in examples.rglob("*.json"):
         doc = read_json(path)
@@ -335,14 +478,7 @@ def check_repository(root: Path = ROOT) -> list[str]:
                 errors.append(f"History revision mismatch: {task['id']}")
             if assignment["current_requirements"].get(latest["field"]) != latest["value"]:
                 errors.append(f"Current requirement disagrees with history: {task['id']}")
-    for path in root.rglob("*.md"):
-        for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", path.read_text(encoding="utf-8")):
-            if re.match(r"^[a-z]+:", target) or target.startswith("#"):
-                continue
-            local = target.split("#", 1)[0]
-            candidate = (path.parent / local).resolve()
-            if not candidate.is_relative_to(root.resolve()) or not candidate.exists():
-                errors.append(f"{path.relative_to(root)}: broken local link {target}")
+    errors.extend(check_markdown_links(root, [path for path in public_files if path.suffix == ".md"]))
     return errors
 
 if __name__ == "__main__":
@@ -354,4 +490,4 @@ if __name__ == "__main__":
     if errors:
         print("\n".join(f"FAIL: {e}" for e in errors), file=sys.stderr)
         sys.exit(1)
-    print("PASS: example routing, project references, assignment contracts, history, and documentation links")
+    print("PASS: public package, example routing, project references, assignment contracts, history, and documentation links")

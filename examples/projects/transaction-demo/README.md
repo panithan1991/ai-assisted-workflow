@@ -1,7 +1,9 @@
 # Transaction demo
 
-ตัวอย่างสมมติของการลงทะเบียนโปรเจ็คที่มีโฟลเดอร์อยู่แล้ว ไม่มีข้อมูลธุรกรรม โมเดล หรือบัญชีบริการจริง
+This fictional example shows how to register a project that already has its own folder. It contains no real transaction data, model, service account, or experiment results.
 
-เริ่มจาก [สถานะหลัก](project-context.json) และ [กติกาการทำงาน](AGENTS.md) ส่วน [ต้นทางจำลอง](sources.json) ใช้แสดงวิธีอ้างแหล่งข้อมูลเท่านั้น
+Start with the [project context](project-context.json) and [working instructions](AGENTS.md). The [fictional source references](sources.json) demonstrate how to record provenance; they are not a dataset to download.
 
-สารบัญกลางเก็บทางเข้าไปยังโฟลเดอร์นี้ โดยไม่คัดลอกข้อกำหนดปัจจุบันเป็นอีกชุด ตัวตรวจเปิดอ่านข้อมูลกำกับและตรวจเส้นทาง ไม่เรียกโค้ดโปรเจ็คหรือรันโมเดล
+The workspace index points to this folder without maintaining a second copy of the project's current requirements. The checker reads its metadata and verifies local paths. It does not import project code or run a model.
+
+The project remains in `awaiting_user_round_selection`. Any future experiment would require an explanation of the options and the user's choice for that run. No remote upload is authorized by this example.

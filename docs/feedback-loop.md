@@ -1,76 +1,83 @@
-# วงจรตรวจงานและ Feedback
+# Verification and feedback
 
-วงจรนี้ใช้กับชิ้นงานสำคัญ เช่น รายงาน โค้ดที่แก้เสร็จ คำตอบหรือสรุปเพื่อสอบที่ขอเป็นชิ้นงาน การจัดโฟลเดอร์ และ milestone ของโปรเจ็ค ไม่ถามหลังคำถามทั่วไป คำอธิบายสั้น ข้อความสถานะ หรือแต่ละขั้นระหว่างทำงาน
+Use this loop for important deliverables: reports, completed code changes, requested study materials, folder maintenance, and project milestones. Skip it for casual questions, short explanations, progress updates, and intermediate steps.
 
-การใช้งานเป็นกติกาที่ผู้ใช้กับผู้ช่วยทำตามในแชต ผู้ช่วยต้องอ่านนโยบายที่เปิดใช้ในพื้นที่ของตน ไม่มี daemon หรือการฝึกโมเดลเบื้องหลัง และไม่ทำให้ความจำซิงก์ข้ามแอปเอง
+This is a working agreement between the user and assistant. The assistant must read the policy used in its workspace. The loop does not run as a background service, retrain a model, or synchronize memory across applications.
 
-```mermaid
+~~~mermaid
 flowchart TD
-    A["กำหนดเกณฑ์สำเร็จจากคำขอ"] --> B["ลงมือทำในขอบเขตที่อนุญาต"]
-    B --> C["ตรวจด้วยหลักฐานที่เหมาะสม"]
-    C -->|"พบปัญหา"| D["ตรวจสาเหตุ แก้ และตรวจส่วนที่เกี่ยวข้องใหม่"]
+    A["Define success from the current request"] --> B["Work within the authorized scope"]
+    B --> C["Verify with appropriate evidence"]
+    C -->|"Problem found"| D["Investigate, fix, and recheck affected work"]
     D --> C
-    C --> E["ส่งมอบ พร้อมผลตรวจและข้อจำกัด"]
-    E -->|"งานสำคัญ"| F["Feedback 3 ตัวเลือก ข้ามได้"]
-    E -->|"คำถามทั่วไป"| G["จบคำตอบโดยไม่ถาม Feedback"]
-    F -->|"ต้องปรับ"| D
-    F -->|"ใช้ได้"| H["บันทึกความเห็นสำหรับฉบับนี้"]
-```
+    C --> E["Deliver with checks and limitations"]
+    E -->|"Important deliverable"| F["Offer three optional feedback choices"]
+    E -->|"Casual question"| G["Finish without a feedback prompt"]
+    F -->|"Adjust or off target"| D
+    F -->|"Accepted"| H["Record feedback for this delivery"]
+    F -->|"No answer"| I["Keep pending; do not remind"]
+    F -->|"Explicitly skipped"| J["Record skipped"]
+~~~
 
-## ก่อนและระหว่างทำงาน
+## Before and during work
 
-สรุปเกณฑ์จากคำขอปัจจุบันและข้อกำหนดที่ยืนยันแล้ว หากชัดเจนอยู่แล้วไม่ต้องถามซ้ำ ตรวจตามสิ่งที่งานนั้นต้องพิสูจน์ เช่น ผลคำนวณและการแปลผลสำหรับงานสถิติ การรันและผลลัพธ์สำหรับโค้ด จำนวนหน้าและภาพหน้าที่แสดงผลจริงสำหรับรายงาน ลิงก์และแฮชต้นฉบับสำหรับการจัดไฟล์
+Define success using the current request and confirmed requirements. Do not ask again when the answer is already clear. Match verification to the task:
 
-ผลตรวจใช้ ผ่าน / ไม่ผ่าน / ยังไม่ได้ตรวจ / ไม่เกี่ยวกับงานนี้ พร้อมระบุสิ่งที่ยังไม่ทราบ ไม่ถือว่ามีไฟล์อยู่หรือ compile ผ่านแล้วเนื้อหาถูกต้องทั้งหมด
+- Calculations and interpretation for statistical work.
+- Execution and meaningful results for code.
+- Page count and rendered-page inspection for a document.
+- Links and original-file hashes for folder maintenance.
 
-แก้ข้อผิดพลาดที่ยืนยันได้ภายในขอบเขตเดิมโดยไม่ขออนุญาตซ้ำ หากต้องเปลี่ยนโจทย์หรือทำสิ่งที่ยังไม่ได้อนุญาต ให้แจ้งเหตุผลและรอข้อมูล/การอนุญาตที่จำเป็น การให้ Feedback ไม่อนุญาตรันโมเดลรอบใหม่หรือส่งข้อมูลไปบริการภายนอกแทนเจ้าของงาน
+Record verification as `passed`, `failed`, `not_checked`, or `not_applicable`, with its evidence and limits. A file's existence or successful compilation alone does not establish content accuracy.
 
-## หลังส่งมอบงานสำคัญ
+Fix confirmed defects within the authorized scope. If a change needs new requirements or permission, explain what is missing and wait for it. Feedback does not replace authorization for a new model run, external data transfer, or publication.
 
-ส่งมอบผลที่เปิดดูหรือตรวจได้ก่อน แล้วถามครั้งเดียวสำหรับฉบับนั้น:
+## After an important delivery
 
-> งานชิ้นนี้ตรงกับที่ต้องการหรือยังครับ? ข้ามได้
+First provide a result the user can inspect. Then offer the following once for that delivery version:
 
-| ตัวเลือก | รหัส | สิ่งที่ทำต่อ |
+> Does this deliverable meet your needs? You can skip this question.
+
+| Choice | Stored value | Next step |
 |---|---|---|
-| ใช้ได้ตามต้องการ | accepted | บันทึกคำตอบสำหรับฉบับที่ประเมิน โดยคงผลตรวจและสิทธิ์เดิม |
-| ขอปรับบางจุด | adjust | ถ้ามีรายละเอียดให้แก้ตามนั้น ถ้ายังไม่ชัดให้ถามประเด็นหลักหนึ่งข้อ |
-| ยังไม่ตรงโจทย์ | off_target | ทบทวนเป้าหมายและจุดที่คลาดเคลื่อนก่อนทำต่อ |
+| Meets my needs | `accepted` | Record the response for this version; retain existing verification and permissions |
+| Needs a few changes | `adjust` | Apply clear requested changes, or ask one focused question if the change is unclear |
+| Does not meet the request | `off_target` | Revisit the goal and identify the mismatch before continuing |
 
-ใช้ตัวเลือกในแชตเมื่อเครื่องมือรองรับ หากไม่มีให้แสดงข้อความสามข้อและรับเลขหรือข้อความตอบกลับ ไม่ต้องติดตั้ง UI ใหม่
+Use chat choices when the host supports them. Otherwise present the three options as text and accept a number or written response; no new interface is required.
 
-หากผู้ใช้บอกความเห็นเกี่ยวกับฉบับนั้นชัดเจนแล้ว ไม่ต้องถามฟอร์มอีก ไม่มีคำตอบคง pending ไม่ถือว่า accepted ไม่ทวงหรือสร้าง reminder เมื่อผู้ใช้เปลี่ยนเรื่อง หากผู้ใช้ข้ามชัดเจนให้ใช้ skipped
+If the user already gave explicit feedback about that version, do not ask again. No answer remains `pending`; it is not acceptance. Do not send reminders when the user moves on. Use `skipped` only when the user explicitly skips.
 
-## แปลความเห็นเป็นงานที่ต้องแก้
+## Turn feedback into appropriate work
 
-| ประเภท | ตัวอย่าง | การตอบสนอง |
+| Category | Example | Response |
 |---|---|---|
-| ข้อผิดพลาด | คำนวณหรือแปลผลผิด | ตรวจหลักฐาน แก้ และเพิ่มการตรวจเมื่อช่วยป้องกันข้อผิดพลาดเดิม |
-| ไม่ตรงข้อกำหนด | จำนวนหน้าหรือไฟล์ผิด | แก้ให้ตรงข้อกำหนดปัจจุบัน |
-| ความชอบ | อยากสั้นลงหรือเพิ่มตัวอย่าง | ปรับงานนี้ก่อน ไม่ยกเป็นกฎทุกวิชาโดยอัตโนมัติ |
-| โจทย์เปลี่ยน | เพิ่มหัวข้อหรือเปลี่ยนข้อมูล | เพิ่มรุ่นข้อกำหนด ยกเลิกความพร้อมที่อิงฉบับเดิม และตรวจใหม่ |
+| Defect | A calculation or interpretation is wrong | Check evidence, correct the work, and add a relevant check when useful |
+| Requirement mismatch | Wrong file type or page count | Match the current requirements |
+| Preference | Shorter text or another example | Apply to this task; do not automatically make it a rule for every course |
+| Scope change | New section or different data | Increment requirements revision, invalidate stale readiness, and verify again |
 
-ข้อกล่าวว่าเนื้อหาผิดยังต้องตรวจหลักฐาน ไม่แก้ข้อเท็จจริงให้ผิดเพื่อให้ได้คำตอบว่าพอใจ เมื่อแก้ไฟล์ที่เลือกต้องเพิ่มรุ่นผลงานและตรวจใหม่ตาม contract เดิม
+A claim that a fact is wrong still needs evidence. Do not make an answer inaccurate to gain approval. When selected output changes, increment its artifact revision and verify the revised file.
 
-## บันทึกโดยไม่รับรองเกินหลักฐาน
+## Bind feedback to what was delivered
 
-ผูก Feedback กับ delivery_id, task_id, รุ่นและ hash ของข้อกำหนด รวมถึงรุ่นและ hash ของชิ้นงาน สำหรับคำตอบในแชตใช้ hash ของเนื้อหาที่ส่ง ผู้บันทึกสร้าง snapshot จากสิ่งที่ส่งมอบจริง คำตอบที่กำกวมต้องยืนยันว่าหมายถึงฉบับใดก่อนบันทึก
+Record `delivery_id`, `task_id`, requirements revision/hash, and artifact revision/hash. For a chat answer, hash the delivered text. Build the delivery snapshot from actual output, and clarify an ambiguous response before assigning it to a version.
 
-Feedback เก่ายังคงเป็นประวัติเมื่อมีฉบับใหม่ แต่ห้ามถ่าย acceptance มาให้ฉบับใหม่ ผลตรวจ ความคิดเห็นผู้ใช้ และหลักฐานส่งจริงเป็นคนละสถานะ และ Feedback ไม่เป็น field บังคับของ assignment
+Earlier feedback remains history after a new delivery. Do not transfer acceptance to the new version. Objective verification, satisfaction, and actual submission are separate records; feedback is not a required assignment field.
 
-เก็บความเห็นจริงในพื้นที่ส่วนตัวเท่านั้น ตัวอย่างใน Blueprint เป็นข้อมูลสมมติ การจดบทเรียนช่วยให้ผู้ช่วยที่อ่านบริบทครั้งถัดไปปรับวิธีทำงานได้ ไม่ได้แปลว่ามีการปรับน้ำหนักโมเดลหรือเก็บทุกแชตถาวร
+Keep real responses in private state. The repository contains only fictional feedback examples. Saved lessons can help a later assistant that reads them, but do not imply model-weight changes or permanent capture of every conversation.
 
-## ตัวชี้วัดเริ่มต้น
+## Measure improvement honestly
 
-เก็บผลตรวจฉบับแรก จำนวนรอบที่แก้ และเหตุที่แก้ โดยแยกความผิดพลาดออกจากความชอบและการเปลี่ยนโจทย์ หากรายงานความพอใจให้นับเฉพาะงานที่มีคำตอบชัดเจน พร้อมจำนวนงานที่ตอบและยัง pending ไม่แต่งเปอร์เซ็นต์จากการไม่ตอบ
+Useful starting measures are the first review result, number of revision rounds, and reasons for changes. Separate defects from preferences and scope changes. If reporting satisfaction, include the number of explicit responses and pending deliveries; do not count silence as success.
 
-## ทดลองตรวจ contract
+## Try the contract
 
-[ตัวอย่าง pending](../examples/feedback/pending.json) ไม่มีคำตอบผู้ใช้ ส่วน tests ใช้คำตอบจำลองเพื่อตรวจกรณีต่อไปนี้:
+The [pending example](../examples/feedback/pending.json) contains no user response. Tests use simulated responses to check the rules:
 
-```sh
+~~~sh
 python -B tools/check_blueprint.py
 python -B -m unittest discover -s tests -p test_feedback.py -v
-```
+~~~
 
-ตัวตรวจต้องยอมให้ข้าม ไม่ย้ายความพอใจไปอีกฉบับ และไม่เปลี่ยนผลตรวจ failed หรือสิทธิ์ดำเนินการเพียงเพราะผู้ใช้เลือก accepted ดู [รายละเอียดรูปแบบข้อมูล](data-contracts.md)
+The checks must allow skipping, prevent feedback from applying to a different delivery, and keep failed verification and execution permissions unchanged after acceptance. See the [data contract](data-contracts.md) for record fields and limits.

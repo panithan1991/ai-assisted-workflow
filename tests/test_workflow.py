@@ -89,7 +89,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_requirement_fingerprint_matches_live_encoding(self):
         import hashlib
-        requirements = {"language": "ภาษาไทย", "sections": ["โจทย์", "วิธีทำ"]}
+        requirements = {"language": "\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22", "sections": ["\u0e42\u0e08\u0e17\u0e22\u0e4c", "\u0e27\u0e34\u0e18\u0e35\u0e17\u0e33"]}
         payload = json.dumps(requirements, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         self.assertEqual(checker.requirements_sha256(requirements),
                          hashlib.sha256(payload.encode("utf-8")).hexdigest())
@@ -183,6 +183,30 @@ class WorkflowTests(unittest.TestCase):
             checker.resolve_under(self.root, "../private.txt")
         with self.assertRaises(ValueError):
             checker.resolve_under(self.root, "C:/private.txt")
+
+    def test_nonportable_path_aliases_and_streams_are_rejected(self):
+        for value in ("submission/demo.pdf:stream", "NUL.txt", "folder/../demo.pdf",
+                      "submission//demo.pdf", "submission/demo.pdf.", "folder\\demo.pdf"):
+            with self.subTest(path=value), self.assertRaises(ValueError):
+                checker.resolve_under(self.root, value)
+
+    def test_boolean_revisions_do_not_certify_ready_work(self):
+        for record in ("verification", "artifact", "evidence"):
+            with self.subTest(record=record):
+                doc = self.ready_document()
+                if record == "verification":
+                    doc["verification"]["artifact_revision"] = True
+                elif record == "artifact":
+                    doc["artifacts"][0]["revision"] = True
+                else:
+                    self.edit_evidence(artifact_revision=True)
+                self.assertTrue(checker.validate_assignment(doc, self.root))
+
+    def test_malformed_workflow_state_reports_failure_without_crashing(self):
+        self.doc["status"] = {"unexpected": "object"}
+        self.assertIn("Unknown workflow state", checker.validate_assignment(self.doc, self.root))
+        self.assertTrue(checker.transition_errors(self.doc, "in_progress", self.root))
+        self.assertTrue(checker.transition_errors({}, [], self.root))
 
     def test_transition_does_not_mutate_source(self):
         doc = self.ready_document()

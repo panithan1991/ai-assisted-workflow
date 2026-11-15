@@ -1,95 +1,114 @@
 # AI-assisted Workflow
 
-แนวทางทำงานร่วมกับ AI สำหรับการเรียน โปรเจ็ค และงานทั่วไป
+A practical, file-based approach to working with AI across study, research, projects, and everyday tasks.
 
-เวลาทำงานกับ AI หลายเรื่อง เราอาจต้องเล่าข้อมูลเดิมซ้ำ หาไฟล์ล่าสุดไม่เจอ หรือกลับมาทำงานต่อแล้วจำไม่ได้ว่าค้างตรงไหน AI-assisted Workflow เสนอวิธีจัดเอกสารและลำดับงานให้ชัดเจน เพื่อให้คุณและผู้ช่วย AI เริ่มงานต่อได้สะดวกขึ้น
+When you work on several topics with an AI assistant, it can be hard to find the latest requirements, identify the right file, or pick up where you left off. AI-assisted Workflow provides a way to organize that information so you and your assistant can resume work from readable files.
 
-ในโครงการนี้มีคู่มือ ตัวอย่างการจัดไฟล์ และเครื่องมือสำหรับทดลองตาม สามารถเลือกใช้เฉพาะส่วนที่เหมาะกับงานของคุณ แล้วค่อยขยายเมื่อมีงานมากขึ้น
+This repository contains guides, fictional examples, an instruction template, and small Python tools. Start with one task and adopt only the parts that help you.
 
-## ใช้ทำอะไรได้บ้าง
+## What you can use it for
 
-- **เรียนและเตรียมสอบ:** เก็บเอกสารประกอบการเรียน สรุป และแบบฝึกหัดแยกตามวิชา กลับมาอ่านทบทวนได้ง่าย
-- **ทำรายงานและการบ้าน:** เก็บโจทย์ล่าสุด ต้นฉบับ ร่าง และฉบับที่ตรวจแล้วให้หาเจอในที่เดียว
-- **ทำโปรเจ็ค:** ระบุเป้าหมาย ทดลองเป็นรอบ และเก็บผลแต่ละรอบไว้เปรียบเทียบ
-- **ค้นคว้าเรื่องที่สนใจ:** รวบรวมคำอธิบาย แหล่งข้อมูล และประเด็นที่อยากศึกษาต่อ
+- **Learning and exam preparation:** keep source material, explanations, practice questions, and review notes organized by subject.
+- **Reports and assignments:** distinguish the current requirements, original sources, drafts, and reviewed deliverables.
+- **Projects and experiments:** define a goal, compare iterations, and record what changed and how it was checked.
+- **Research and personal interests:** connect useful explanations to their sources and keep track of open questions.
 
-เหมาะกับคนที่ใช้ AI ช่วยงานหลายเรื่อง และอยากจัดงานให้เป็นระเบียบโดยเริ่มจากไฟล์และโฟลเดอร์ที่คุ้นเคย
+The approach works with assistants that can read the workspace files you make available to them. Each assistant keeps its own conversation history, account settings, permissions, and tools. Shared files provide continuity; they do not automatically synchronize chats or grant access to another app.
 
-## วิธีทำงาน
+## How it works
 
-เริ่มจากทำความเข้าใจโจทย์และอ่านเอกสารที่เกี่ยวข้อง จากนั้นลงมือทำ ตรวจผลงาน และปรับแก้จนตรงกับสิ่งที่ต้องการ
+Understand the task, read the relevant sources, do the work, and check the result against the current requirements. Record enough context for the next session to continue.
 
 ```mermaid
 flowchart TD
-    A["กำหนดเป้าหมาย"] --> B["อ่านเอกสารและวางแผน"]
-    B --> C["ลงมือทำ"]
-    C --> D{"ตรวจผลงาน"}
-    D -->|"ยังต้องแก้"| E["แก้ไข"]
+    A["Define the goal and current requirements"] --> B["Read relevant sources and plan"]
+    B --> C["Do the work"]
+    C --> D{"Check the current result"}
+    D -->|"Needs revision"| E["Revise the work"]
     E --> C
-    D -->|"ผ่าน"| F["ส่งมอบผลงาน"]
-    F --> G{"เป็นงานสำคัญหรือไม่?"}
-    G -->|"คำถามทั่วไป"| H["จบรอบงาน"]
-    G -->|"งานสำคัญ"| I["รับความเห็นจากผู้ใช้"]
-    I -->|"ใช้ได้ตามต้องการ"| H
-    I -->|"ขอปรับบางจุด"| E
-    I -->|"ยังไม่ตรงโจทย์"| A
-    I -->|"ข้ามได้"| H
+    D -->|"Passes"| F["Record the selected artifact and evidence"]
+    F --> G["Deliver the result and its limits"]
+    G --> H{"Important deliverable?"}
+    H -->|"General question"| I["Finish this iteration"]
+    H -->|"Yes"| J["Offer optional feedback once"]
+    J -->|"Works as intended"| K["Record the explicit response"]
+    K --> I
+    J -->|"Needs some changes"| E
+    J -->|"Does not meet the goal"| A
+    J -->|"Explicitly skipped"| L["Record skipped feedback"]
+    L --> I
+    J -->|"No response"| M["Leave feedback pending"]
+    M --> I
 ```
 
-การตรวจผลงานขึ้นอยู่กับงานที่ทำ เช่น ตรวจคำตอบและการคำนวณ รันโค้ด หรืออ่านเอกสารฉบับที่จะส่ง หากแก้โจทย์หรือเปลี่ยนผลงาน ควรตรวจฉบับใหม่อีกครั้ง
+Choose checks that fit the work: inspect calculations, run relevant code tests, compare a report with its brief, or review the rendered document. If the requirements or selected file change, check the new version again. A previous review should not make a changed result appear ready.
 
-หลังส่งมอบงานสำคัญ ผู้ใช้เลือกบอกได้ว่า **ใช้ได้ตามต้องการ**, **ขอปรับบางจุด** หรือ **ยังไม่ตรงโจทย์** เพื่อช่วยกำหนดสิ่งที่จะทำต่อ ข้ามการตอบได้ และคำถามทั่วไปไม่จำเป็นต้องถามความเห็นทุกครั้ง
+After an important deliverable, the user may choose **Works as intended**, **Needs some changes**, or **Does not meet the goal**. Feedback is optional and separate from verification. Acceptance does not prove a submission occurred or authorize an upload, model run, or other external action.
 
-## เริ่มใช้กับงานของคุณ
+If the user explicitly skips feedback, record it as `skipped`. If they do not respond, leave it `pending` without sending automatic reminders.
 
-1. เลือกงานหนึ่งชิ้นที่กำลังทำ เช่น รายงานหนึ่งเรื่องหรือโปรเจ็คหนึ่งงาน
-2. รวบรวมโจทย์ เอกสารต้นฉบับ และสิ่งที่ต้องทำให้เสร็จไว้ด้วยกัน
-3. แยกต้นฉบับ โน้ต ร่าง และฉบับที่ตรวจแล้วให้ชัดเจน โดยใช้โฟลเดอร์เดิมต่อได้
-4. ใช้ผู้ช่วย AI ที่อ่านไฟล์ในพื้นที่ทำงานได้ ให้ช่วยอ่านข้อมูล วางแผน และทำงานตามลำดับ
+## Start with your own work
 
-ดู [ตัวอย่างการจัดงาน](examples/README.md) และปรับ [คำแนะนำสำหรับผู้ช่วย AI](templates/AGENTS.example.md) ให้เข้ากับวิธีทำงานของคุณ
+1. Choose one active task, such as a report or a small project.
+2. Identify its current goal, requirements, original sources, and next action.
+3. Keep originals, notes, drafts, and reviewed outputs distinct. Existing project folders can stay where they are.
+4. Give your assistant access to the relevant files and ask it to work from that context.
+5. Save confirmed corrections, the selected artifact, and meaningful verification evidence before handing off the task.
 
-ตัวอย่างคำขอสำหรับเริ่มทำรายงาน:
+Browse the [example workspace](examples/README.md), then adapt the [assistant instruction template](templates/AGENTS.example.md) for your own workspace. The example course identifiers are illustrative; replace them with your own subjects or project names.
+
+For example:
 
 ```text
-ช่วยอ่านโจทย์และเอกสารในโฟลเดอร์นี้ แล้วสรุปว่าต้องทำอะไรบ้าง
-วางโครงรายงานก่อน จากนั้นเขียนร่างโดยอธิบายให้อ่านเข้าใจง่าย
-เมื่อเสร็จแล้ว ตรวจเนื้อหาให้ครบตามโจทย์ และบอกส่วนที่ยังต้องแก้
-เก็บเอกสารต้นฉบับไว้ และระบุให้ชัดว่าควรเปิดอ่านไฟล์ฉบับไหน
+Read the task brief and relevant source files in this folder.
+Summarize the current requirements and propose a report outline.
+Write a clear draft, then check it against the requirements.
+Preserve the original sources, identify the current output file,
+and record any unresolved questions or limitations.
 ```
 
-## ลองตัวอย่าง
+You can also keep reusable notes in a shared knowledge folder or an Obsidian vault while leaving project files in place. The [shared knowledge guide](docs/shared-knowledge.md) explains how to separate work, study, and general notes without replacing the projects' own current state.
 
-ดาวน์โหลดโครงการผ่าน **Code → Download ZIP** แล้วแตกไฟล์ หรือใช้คำสั่ง:
+## Try the examples
+
+Download and extract the repository using **Code > Download ZIP**, or clone it:
 
 ```sh
 git clone https://github.com/panithan1991/ai-assisted-workflow.git
 cd ai-assisted-workflow
 ```
 
-ใช้ Python 3.10 ขึ้นไป เปิดเทอร์มินัลในโฟลเดอร์โครงการ แล้วรันคำสั่งต่อไปนี้ได้โดยไม่ต้องติดตั้งแพ็กเกจเพิ่ม:
+Use **Python 3.10 or later**. From the repository root, run:
 
 ```sh
 python -B tools/check_blueprint.py
+python -B -m unittest discover -s tests -v
 python -B tools/demo_workflow.py
 ```
 
-คำสั่งแรกตรวจความครบถ้วนของตัวอย่างและลิงก์เอกสาร ส่วนคำสั่งที่สองสาธิตงานสมมติตั้งแต่รับโจทย์ ตรวจผลงาน ปรับตามโจทย์ที่เปลี่ยน ไปจนถึงจำลองการยืนยันส่งงาน
+Use `python3` instead of `python` if that is how Python is installed on your system. These commands use the Python standard library; no additional packages, AI account, API key, or model download are required.
 
-อ่าน [คำอธิบายตัวอย่างทีละขั้น](docs/walkthrough.md) ประกอบได้ ข้อความ `EXPECTED REJECTION` ในผลสาธิตหมายถึงโปรแกรมหยุดกรณีที่ควรหยุด เช่น ไฟล์ถูกแก้หลังตรวจแล้ว
+- The checker validates example metadata, references, documentation links, and the repository's publication checks.
+- The tests exercise workflow and feedback invariants, including stale verification and invalid state changes.
+- The demo creates fictional files in a temporary directory and replays a task from draft through revision, review, and a simulated submission confirmation. It does not submit anything or run a model.
 
-## อ่านเพิ่มเติม
+An `EXPECTED REJECTION` message in the demo means a guard worked as intended, such as rejecting an artifact changed after review. See the [step-by-step walkthrough](docs/walkthrough.md) for the expected sequence.
 
-| เอกสาร | เหมาะสำหรับ |
+## Explore the design
+
+| Guide | What it covers |
 |---|---|
-| [วิธีทำงาน](docs/workflows.md) | ดูตัวอย่างการเรียน ทำงาน และกลับมาทำต่อ |
-| [เริ่มนำไปใช้](docs/adoption-plan.md) | ปรับใช้กับโฟลเดอร์และงานที่มีอยู่ |
-| [การตรวจงานและรับความเห็น](docs/feedback-loop.md) | ทำความเข้าใจการปรับงานหลังส่งมอบ |
-| [โครงสร้างของโครงการ](docs/architecture.md) | ศึกษาว่าแต่ละส่วนเชื่อมกันอย่างไร |
-| [รูปแบบข้อมูล](docs/data-contracts.md) | ปรับตัวอย่างหรือพัฒนาเครื่องมือต่อ |
-| [เหตุผลในการออกแบบ](docs/decisions.md) | อ่านที่มาของแนวทางที่เลือกใช้ |
-| [แหล่งอ้างอิง](docs/references.md) | อ่านเอกสารเครื่องมือที่เกี่ยวข้อง |
+| [Workflows](docs/workflows.md) | Learning, projects, document work, and resuming a task |
+| [Adoption plan](docs/adoption-plan.md) | Introducing the approach into an existing workspace |
+| [Verification and feedback](docs/feedback-loop.md) | Checking work, collecting optional feedback, and revising |
+| [Architecture](docs/architecture.md) | How instructions, context, files, and evidence fit together |
+| [Shared knowledge](docs/shared-knowledge.md) | Keeping connected notes across work, study, and general interests |
+| [Data contracts](docs/data-contracts.md) | The example metadata and validation rules |
+| [Design decisions](docs/decisions.md) | Reasons behind the main choices |
+| [References](docs/references.md) | Related official documentation |
+
+This is a workflow blueprint, not an installed assistant service. It does not continuously capture conversations, train a model, synchronize apps, or assess whether a learner has mastered a subject. Those claims require separate systems and evidence.
 
 ## License
 
-ใช้ [MIT License](LICENSE) สามารถนำไปใช้ แก้ไข และแจกจ่ายต่อได้ รวมถึงใช้เชิงพาณิชย์ โดยคงประกาศลิขสิทธิ์และข้อความ License ไว้ตามเงื่อนไข
+Released under the [MIT License](LICENSE). You may use, modify, and redistribute it, including commercially, subject to the license terms and retention of its copyright and permission notice.

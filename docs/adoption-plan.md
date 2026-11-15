@@ -1,67 +1,74 @@
 # Adoption plan
 
-เอกสารนี้เป็นแผนนำไปใช้ ไม่ใช่บันทึกว่าได้ย้ายข้อมูล ติดตั้ง environment หรือสร้างการเชื่อมต่อแล้ว
+Adopt the workflow one task at a time. This guide describes steps you can take; it does not install environments, move files, or connect applications.
 
-## สถานะของต้นแบบ
+The repository provides documentation, fictional examples, a reference checker, tests, and a temporary-file demonstration. Your runtime, permissions, source material, and application access still need to be configured and verified.
 
-ได้นำหลักการของระยะสารบัญ สถานะล่าสุด และการตรวจฉบับงานไปใช้ในพื้นที่ส่วนตัวแล้ว และมีการลงทะเบียนโปรเจ็คโดยรักษา path เดิม ชุดแบ่งปันนี้แสดงกลไกเหล่านั้นด้วยข้อมูลสมมติ ดู [ตัวอย่างทีละขั้น](walkthrough.md)
+## Stage 1: Find the current task
 
-ยังไม่ถือว่าทุกระยะเสร็จ การรัน PyTorch/GPU การเลือก runtime และการประสานหลายแอปต้องทดสอบในพื้นที่ของผู้ใช้แต่ละราย
+- Add a short root `AGENTS.md` using the [instruction template](../templates/AGENTS.example.md).
+- Create an index that points to existing course and project folders.
+- Keep current lesson or project context separate from long schedules and logs.
+- Choose one authoritative record for each assignment's current requirements and revisions.
+- Identify the files selected for the next delivery.
 
-## ระยะ 1: สารบัญและสถานะล่าสุด
+**Success criterion:** Given a course and task ID, you can find the current requirements, original sources, and selected files without reconstructing the entire chat history.
 
-- เพิ่ม root AGENTS.md ขนาดสั้น และให้ชี้คำแนะนำวิชาตามงาน
-- ใช้ workspace index ชี้ DADS6001, DADS6003 และ dads5001 ตาม path เดิม
-- ปรับ course context ให้บทปัจจุบันอ่านง่าย แยก cache ตารางเรียนที่ยาว
-- ปรับ assignment context ให้มี current_requirements และ revision
-- ชี้ไฟล์ที่เลือกเป็นฉบับพร้อมส่งเพียงชุดเดียวต่อการส่งหนึ่งครั้ง
+The identifiers in [examples](../examples/README.md) are illustrative. Replace them with your own course or project names; a particular naming convention is not required.
 
-**ผ่านเมื่อ:** เปิดงานด้วยรหัสวิชาและชื่องานแล้วหาข้อกำหนดปัจจุบัน ต้นฉบับ และไฟล์ปัจจุบันได้ โดยไม่ต้องอ่านข้อความเก่าทั้งชุด
+## Stage 2: Reproduce one small experiment
 
-## ระยะ 2: ทดลอง PyTorch หนึ่งบท
+- Preserve the instructor's original notebook or source file.
+- Create a working copy and choose an explicit interpreter or notebook kernel.
+- Record the runtime, dependencies, inputs, and outputs.
+- Run only the small checks needed for the experiment.
+- For a GPU task, test the framework in that environment rather than relying on driver information.
 
-- เก็บ Notebook อาจารย์เป็น original
-- สร้างสำเนา lab และ environment ที่ระบุชัด
-- เลือก Colab สำหรับทำตามชั้นเรียน หรือ local environment ที่ตรวจแล้ว
-- เก็บผลตรวจ import torch, ตัวอย่าง Tensor, matmul และ autograd
-- ถ้าต้องใช้ GPU ให้ตรวจ torch.cuda.is_available() ใน environment นั้น
+For example, a first PyTorch lab might check an import, tensor creation, matrix multiplication, and automatic differentiation. Test `torch.cuda.is_available()` when CUDA availability matters. The [architecture guide](architecture.md) explains the environment boundary.
 
-**ผ่านเมื่อ:** รันตัวอย่างเดิมซ้ำได้จากคำแนะนำที่ระบุ environment และไฟล์เข้าออก
+**Success criterion:** Another person can reproduce the experiment using the recorded runtime and inputs.
 
-## ระยะ 3: ทดลอง workflow งานส่งหนึ่งงาน
+## Stage 3: Complete one deliverable
 
-- เลือกงานเดียว เช่น NN homework
-- แยกต้นฉบับ source ที่แก้ได้ working files และ submission
-- แก้ metadata เก่าด้วยหลักฐานคำแก้ไขล่าสุด
-- ตรวจการคำนวณและเอกสาร แล้วผูกผลตรวจกับ revision
-- ทดสอบสถานการณ์เปลี่ยนโจทย์หลังตรวจ เพื่อให้ฉบับเดิมกลับไปต้องตรวจใหม่
+- Separate original material, editable source, working files, and selected output.
+- Record confirmed corrections in current requirements; preserve superseded instructions in history.
+- Check calculations, execution results, or document layout as appropriate.
+- Bind verification to the requirements revision, artifact revision, and hashes.
+- Change a requirement after review and confirm that the old verification no longer establishes readiness.
 
-**ผ่านเมื่อ:** เลือกไฟล์ส่งได้ชัด และไม่เกิด ready_to_submit จากผลตรวจคนละรุ่น
+Start with the [runnable walkthrough](walkthrough.md), then apply the contract to one real assignment or report.
 
-## ระยะ 4: ขยายไปหลายวิชาและเครื่องมือ
+**Success criterion:** `ready_to_submit` identifies the reviewed current files and cannot rely on evidence from an older version.
 
-- ใช้รูปแบบเดียวกันกับงานสถิติและ dashboard โดยคง source ของแต่ละงาน
-- ลงทะเบียนโปรเจ็คภายนอก เช่น AI Scientist ด้วย reference ไม่คัด environment ขนาดใหญ่เข้ามา
-- แยกงานดูแลเครื่องจากงานเรียน
-- สำรอง source, metadata และฉบับส่ง พร้อมแยก cache, node_modules และ environment ที่สร้างใหม่ได้
-- ใช้ AnythingLLM/Hermes/Ollama เมื่อมี use case ชัด ไม่เปิดใช้ทุกตัวเพื่อทำงานเดียวกัน
+## Stage 4: Expand carefully
 
-**ผ่านเมื่อ:** เพิ่มวิชา/งานใหม่ได้โดยไม่แก้กฎของวิชาอื่น
+- Register more courses and projects while retaining their working paths.
+- Reference external projects without copying their large environments into the workspace.
+- Keep computer maintenance separate from coursework.
+- Back up sources, metadata, dependency specifications, and selected outputs. Treat reproducible caches and installed dependencies separately under your backup policy.
+- Add another AI tool when it has a clear role, and name the responsible writer for each edit batch.
+- Optionally add a [shared knowledge vault](shared-knowledge.md) for reusable notes across work, study, and general interests.
 
-## ระยะ 5: เผยแพร่ความรู้
+**Success criterion:** Adding a course or tool does not change another course's rules or overwrite its current state.
 
-- ตรวจชุดเอกสารและข้อมูลจำลองใน repository นี้
-- เลือกชื่อ repository และ public/private; ชุด Blueprint นี้เลือก [MIT License](../LICENSE) แล้ว
-- สร้าง remote และ push เมื่อเจ้าของงานสั่งให้เผยแพร่
-- ใช้ CI ตรวจตัวอย่างเมื่อมี pull request
+## Stage 5: Share a reusable subset
 
-## วัดผลด้วยงานจริง
+- Select documentation, templates, and fictional examples you have permission to distribute.
+- Review the exact publication file list for credentials, personal paths, and private work.
+- Run the checker, tests, and walkthrough from the repository root.
+- Publish within the owner's instructions and chosen visibility.
+- Use CI to repeat the checks on pushes and pull requests.
 
-บันทึกค่าก่อนและหลังใช้รูปแบบใหม่:
-- เวลาที่ใช้หาไฟล์ฉบับพร้อมส่ง
-- เวลาที่ใช้เริ่มงานต่อในแชตใหม่
-- จำนวนครั้งที่รันผิด environment
-- จำนวนครั้งที่ใช้ข้อกำหนดเก่าหรือแก้ไฟล์ผิดฉบับ
-- เวลาตั้งแต่รับเอกสารถึงรันตัวอย่างแรกสำเร็จ
+This Blueprint uses the [MIT License](../LICENSE). Review third-party rights separately before adding material from other people.
 
-ยังไม่กำหนดตัวเลขประสิทธิภาพที่ดีขึ้นเป็นเปอร์เซ็นต์จนกว่าจะมี baseline
+## Measure the result
+
+Record a baseline before claiming an improvement. Useful measures include:
+
+- Time needed to find the selected deliverable.
+- Time needed to resume a task in a new chat.
+- Runs started with the wrong interpreter or kernel.
+- Edits made against stale requirements or the wrong file version.
+- Time from receiving source material to a successful first example.
+
+Separate defects from preference changes and new requirements. Report observed results and sample sizes rather than inventing a percentage improvement.

@@ -1,159 +1,159 @@
 # Architecture
 
-## 1. ขอบเขตและผลที่ต้องได้
+## Scope and outcomes
 
-พื้นที่ทำงานรองรับวงจร เรียน → อธิบาย → ทดลอง → เขียนงาน → ตรวจ → เตรียมส่ง และกลับมาทำต่อภายหลังได้ การออกแบบครอบคลุมหลายวิชาและเครื่องมือ AI ที่มีอยู่ ไม่จำเป็นต้องมีฐานข้อมูลหรือบริการกลางเพื่อเริ่มใช้งาน
+The workflow supports a repeatable cycle: learn, explain, experiment, produce a deliverable, verify it, and return to it later. It can span several courses and AI tools without requiring a central database or background service.
 
-ผลที่ตรวจสอบได้:
-- เริ่มงานจากรหัสวิชาและรหัสงาน แล้วค้นพบข้อกำหนดล่าสุด ต้นฉบับ environment และไฟล์ปัจจุบัน
-- คำแก้ไขของอาจารย์ทำให้การตรวจฉบับเดิมหมดอายุอย่างชัดเจน
-- แยกความพร้อมของ GPU/driver ออกจากความพร้อมของ PyTorch ในแต่ละ environment
-- ระบุไฟล์ที่เตรียมส่งได้ โดยไม่อนุมานว่าได้ส่งงานแล้ว
-- ย้าย configuration และเอกสารขึ้น GitHub ได้โดยไม่พาข้อมูลส่วนตัวขึ้นไป
+The design aims to make these outcomes inspectable:
 
-## 2. System context
+- A task ID leads to its current requirements, original sources, runtime information, and selected output.
+- A confirmed requirement change makes previous verification stale.
+- Machine-level GPU capability is separate from framework availability in a particular environment.
+- A reviewed deliverable is distinguishable from an actually submitted deliverable.
+- A reusable public Blueprint can be shared without publishing a private workspace.
 
-```mermaid
+## System context
+
+~~~mermaid
 flowchart LR
-    T["อาจารย์ / ทีม"] -->|โจทย์ สไลด์ และคำแก้ไข| W["พื้นที่ทำงานของผู้เรียน"]
-    U["ผู้เรียน"] -->|กำหนดวิชา งาน และเป้าหมาย| W
-    W -->|คำถามและงานที่อนุญาต| AI["ผู้ช่วย AI"]
-    AI -->|คำอธิบาย โค้ด และร่าง| W
-    W -->|ทดลอง| R["Colab / Python / Docker"]
-    R -->|ผลรันและหลักฐาน| W
-    W -->|ฉบับที่ตรวจแล้ว| U
-    U -->|ส่งจริง| S["ช่องทางส่งอาจารย์"]
-    W -->|เฉพาะแบบแปลนที่คัดแล้ว| G["GitHub"]
-```
+    T["Instructor or team"] -->|"Requirements, sources, corrections"| W["Personal workspace"]
+    U["User"] -->|"Task and goal"| W
+    W -->|"Question or authorized task"| AI["AI assistant"]
+    AI -->|"Explanation, code, draft"| W
+    W -->|"Experiment"| R["Colab / Python / Docker"]
+    R -->|"Results and evidence"| W
+    W -->|"Reviewed deliverable"| U
+    U -->|"Actual submission"| S["Submission channel"]
+    W -->|"Reviewed shareable subset"| G["GitHub"]
+~~~
 
-การเชื่อมในภาพเป็นเส้นทางการทำงานที่ออกแบบไว้ ไม่ได้หมายความว่าแอปเหล่านี้เชื่อมบัญชี อ่านไฟล์ร่วมกัน หรือซิงก์ความจำอยู่แล้ว
+These arrows describe a workflow, not an installed integration. They do not imply shared accounts, automatic file access, or synchronized chat history.
 
-## 3. ส่วนประกอบและความรับผิดชอบ
+## Components and responsibilities
 
-| Component | หน้าที่ | ข้อมูลเข้า | ผลลัพธ์ |
+| Component | Responsibility | Input | Output |
 |---|---|---|---|
-| Workspace index | ชี้ว่าวิชาและงานอยู่ที่ใด | รหัสวิชา/รหัสงาน | ที่อยู่ context และจุดเปิดงาน |
-| Context loader | เลือกอ่านข้อมูลเฉพาะงาน | index + คำขอปัจจุบัน | ชุดบริบทขนาดเล็ก |
-| Task controller | วางลำดับงานและติดตามสถานะ | บริบท + ข้อกำหนด | แผนย่อย สถานะ และงานที่ยังค้าง |
-| Source registry | เก็บต้นทางและรุ่นของเอกสาร | URL/ไฟล์ + checksum เมื่อมี | ต้นฉบับที่อ้างกลับได้ |
-| Execution router | เลือกว่าจะรันที่ใด | ประเภทงาน + environment registry | Colab / local environment / Docker |
-| AI adapter | ใช้เครื่องมือที่เหมาะกับงาน | คำขอ + ขอบเขตไฟล์ | คำอธิบาย โค้ด หรือร่าง |
-| Verification | ตรวจผลให้ตรงกับข้อกำหนดรุ่นปัจจุบัน | ผลงาน + ข้อกำหนด | หลักฐานตรวจผ่าน/ไม่ผ่าน |
-| Artifact registry | ระบุฉบับพร้อมส่งและแหล่งสร้าง | ไฟล์ + checksum + ผลตรวจ | manifest ของฉบับที่เลือก |
-| History and backup | เก็บเหตุการณ์แก้ไขและเวอร์ชันก่อนหน้า | เหตุการณ์สำคัญ | ประวัติและสำเนาที่กู้คืนได้ |
+| Workspace index | Locate a course, project, or task | Stable IDs | Context paths and entry points |
+| Context loader | Read only relevant information | Index and current request | A focused context set |
+| Task controller | Organize work and track progress | Context and requirements | Steps, state, and remaining actions |
+| Source registry | Identify the origin and version of material | Files or URLs, hashes when available | Traceable source references |
+| Execution router | Select where a task runs | Task type and environment registry | Chosen local, cloud, or container runtime |
+| AI adapter | Use a suitable tool within its access and task scope | Request and permitted files | Explanation, code, or draft |
+| Verification | Compare work with current criteria | Deliverable and requirements | Pass/fail evidence and limitations |
+| Artifact registry | Identify selected output | Files, revisions, hashes, and verification | Manifest of the selected version |
+| History and backup | Retain important changes and earlier versions | Change events | An audit trail and recoverable copies |
 
-ระยะแรก Task controller, Context loader และ Execution router เป็นขั้นตอนที่ผู้เรียนกับ Codex ทำตามเอกสาร ยังไม่สร้าง daemon หรือ agent orchestration เพิ่ม
+The context loader, task controller, and execution router are initially documented responsibilities carried out by the user and assistant. This repository does not provide a daemon or an agent orchestration service.
 
-## 4. อ่านบริบทตามงาน
+## Load context by task
 
-```mermaid
+~~~mermaid
 flowchart TD
-    A["คำขอ: DADS6003 / NN homework"] --> B["AGENTS.md ของ workspace"]
-    B --> C["workspace index: อ่านเฉพาะรายการ DADS6003"]
-    C --> D["คำแนะนำและ context ของวิชา"]
-    D --> E["record งานปัจจุบันที่ index ชี้"]
-    E --> F["requirements รุ่นปัจจุบัน"]
-    F --> G["ต้นฉบับ / โค้ด / manifest เฉพาะที่ต้องใช้"]
-    E -. "เมื่อจำเป็นต้องเทียบรุ่น" .-> H["ประวัติเก่า"]
-```
+    A["Request: course and assignment"] --> B["Workspace instructions"]
+    B --> C["Relevant workspace index entry"]
+    C --> D["Course or project instructions and context"]
+    D --> E["Authoritative task record"]
+    E --> F["Current requirements"]
+    F --> G["Required sources, code, and artifact records"]
+    E -. "Only when needed" .-> H["Historical context"]
+~~~
 
-AGENTS.md ใช้เก็บวิธีทำงานที่คงที่ ส่วนสถานะล่าสุดและเนื้อหาเอกสารเก็บในไฟล์แยก ไม่ยัดสไลด์ ตารางเรียน หรือ log ทั้งหมดไว้ในคำสั่งประจำโปรเจ็ค
+Keep stable working rules in `AGENTS.md`. Store changing requirements, schedules, long logs, and source content in separate files.
 
-เมื่อนำไปใช้กับโฟลเดอร์เก่า สามารถเก็บ record ปัจจุบันใน _workspace/state/ แล้วใช้ index ชี้ไปหาได้ โดยถือ metadata เก่าเป็นประวัติ ไม่ให้สคริปต์เดิมที่เขียน assignment-context.json ทับข้อกำหนดปัจจุบัน ตัวอย่างในชุดนี้ใช้ path สั้นเพื่ออ่านง่าย หลักสำคัญคือมี record หลักเพียงชุดเดียวต่อหนึ่งงาน
+When adopting an existing workspace, current records can live in a private `_workspace/state/` directory, with the index pointing to them. Legacy scripts may continue to write older metadata files; those files must not silently regain authority over the selected current record. The short paths in this repository's fictional examples illustrate the same principle: one authoritative record per task.
 
-เมื่อเปิด Codex ที่ root ของ workspace ให้คำสั่ง root ระบุว่าต้องอ่านคำแนะนำของวิชาที่เกี่ยวข้องด้วย ไม่สมมติว่าไฟล์ AGENTS.md ในโฟลเดอร์ลูกทุกวิชาจะถูกโหลดเอง
+When working from a workspace root, explicitly direct the assistant to read the applicable course or project instructions. Codex discovers project instructions along the path from the project root to the current working directory; opening the root does not mean every descendant `AGENTS.md` is loaded. See [OpenAI's instruction guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md). Other clients may discover instructions differently, so check their documentation and access before depending on automatic loading.
 
-พฤติกรรมการอ่าน AGENTS.md และการเรียงลำดับคำแนะนำอ้างอิงจาก [official OpenAI documentation](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+## An adaptable folder layout
 
-## 5. โครงสร้างเป้าหมาย
-
-```text
+~~~text
 workspace/
-├── AGENTS.md                    # วิธีทำงานร่วมกันและวิธีเลือก context
-├── _workspace/
-│   ├── index.json               # ที่อยู่ของแต่ละวิชา ไม่เก็บโจทย์ซ้ำ
-│   ├── environments.json        # Python/kernel/Colab/Docker ที่ยืนยันแล้ว
-│   ├── state/                   # record ปัจจุบันเมื่อรับระบบมาใช้กับไฟล์เดิม
-│   │   ├── courses/
-│   │   └── assignments/
-│   ├── templates/
-│   └── blueprints/
-├── Inbox/                       # เอกสารที่ยังไม่ได้ระบุวิชา/งาน
-├── DADS6001/                    # ใช้ชื่อและที่อยู่เดิมต่อได้
-├── DADS6003/
-│   ├── AGENTS.md
-│   ├── course-context.json       # ตัวอย่าง; ใช้ index ระบุ record หลักเมื่อมีรุ่นเก่า
-│   ├── Lectures/                # ต้นฉบับอาจารย์
-│   ├── Notes/                   # บันทึกความเข้าใจ
-│   ├── Projects/                # โปรเจ็คใหม่; โปรเจ็คเดิมใช้ path เดิมและลงสารบัญ
-│   ├── Labs/
-│   │   └── pytorch-intro/
-│   │       ├── notebooks/
-│   │       ├── src/
-│   │       ├── outputs/
-│   │       └── requirements.txt
-│   └── Assignments/
-│       └── NN_homework/
-│           ├── assignment-context.json
-│           ├── original/
-│           ├── src/
-│           ├── working/
-│           ├── submission/
-│           └── archive/
-├── dads5001/                    # รักษา week10/multipages ที่อ้างอยู่เดิม
-└── Tools/System/                # เครื่องมือดูแลเครื่อง แยกจากบทเรียน
-```
+|-- AGENTS.md                    # Shared rules and context routing
+|-- _workspace/
+|   |-- index.json               # Paths, not duplicate requirements
+|   |-- environments.json        # Runtime references and verification
+|   |-- state/                  # Current records for an existing workspace
+|   |   |-- courses/
+|   |   `-- assignments/
+|   `-- templates/
+|-- Inbox/                      # Material not yet assigned to a task
+|-- course-a/                   # Existing names and paths may be retained
+|-- course-b/
+|   |-- AGENTS.md
+|   |-- course-context.json
+|   |-- Lectures/               # Original teaching material
+|   |-- Notes/
+|   |-- Projects/
+|   |-- Labs/
+|   |   `-- first-lab/
+|   |       |-- notebooks/
+|   |       |-- src/
+|   |       |-- outputs/
+|   |       `-- requirements.txt
+|   `-- Assignments/
+|       `-- example-assignment/
+|           |-- assignment-context.json
+|           |-- original/
+|           |-- src/
+|           |-- working/
+|           |-- submission/
+|           `-- archive/
+`-- Tools/System/               # Maintenance utilities, separate from lessons
+~~~
 
-โฟลเดอร์ที่เสนอใช้กับงานใหม่ได้ก่อน งานเดิมยังอยู่ตำแหน่งเดิมแล้วใช้ index ชี้เข้าไป การย้ายต้องมีแผนที่ old path → new path และตรวจลิงก์/ไฟล์หลังย้าย
+This is a proposed layout, not a directory tree created by the checker. Start with new tasks and point the index to existing projects. Before a later move, prepare an old-to-new path mapping and verify affected links and files.
 
-## 6. บทบาทเครื่องมือ
+## Choose tools by role
 
-| เครื่องมือ | บทบาทที่เสนอ | เมื่อใดจึงใช้ |
+| Tool category | Example use | What must be established |
 |---|---|---|
-| Codex / แชตหลัก | ผู้ประสานงานและผู้แก้ไฟล์หลัก | เรียน อธิบาย เขียนโค้ด ทำรายงาน และตรวจ |
-| Colab | สภาพแวดล้อมทดลองระหว่างเรียน | ทำตาม Notebook ของอาจารย์และใช้ GPU บน Cloud |
-| Python แยก environment | รันทดลองซ้ำในเครื่อง | ต้องการความคงที่ของแพ็กเกจและงานต่อเนื่อง |
-| Docker | แยกบริการและ dependency | MongoDB หรือโปรเจ็คที่มีบริการประกอบ |
-| Ollama | บริการโมเดลในเครื่อง | เมื่อต้องการ inference ด้วยโมเดลที่ติดตั้งไว้ |
-| AnythingLLM | ช่องค้นเอกสารที่เลือกเข้าไป | เมื่อต้องค้นหลายไฟล์และยังต้องอ้างกลับต้นฉบับ |
-| Hermes | งานปฏิบัติซ้ำที่กำหนดชัด | เลือกใช้เป็นงาน ๆ พร้อมขอบเขตที่ผู้เรียนกำหนด |
-| OpenCode | เครื่องมือเขียนโค้ดอีกทางหนึ่ง | เมื่อเลือกใช้แทนผู้แก้ไฟล์หลักในงานนั้น |
-| AI Scientist | ทดลองงานวิจัยเป็นโครงการเฉพาะ | โจทย์ที่ต้องทดลอง วิเคราะห์ และจัดทำงานวิจัย |
-| LaTeX/PDF tools | ผลิตและตรวจเอกสาร | รายงานและการบ้านที่มีสูตรหรือข้อกำหนดรูปแบบ |
+| File-aware AI assistant | Explain material, edit code, draft, review | Instructions, file access, scope, and responsible writer |
+| Hosted notebook | Follow a classroom example or use cloud compute | Selected notebook, runtime, and service limits |
+| Local Python environment | Reproduce experiments on the user's machine | Explicit interpreter or kernel and dependencies |
+| Container runtime | Isolate a database or supporting service | Configuration, data location, and ports |
+| Local model service | Inference with a chosen installed model | Availability, resources, and data handling |
+| Document retrieval tool | Search a selected collection | Included documents and links to originals |
+| Research agent | A separately scoped research project | Experiment plan, criteria, permissions, and results |
+| LaTeX and PDF tools | Produce and inspect formula-heavy documents | Editable source, compilation setup, and rendered-page review |
 
-ไม่ได้กำหนดให้ทุกเครื่องมือต้องเปิดพร้อมกัน และไม่ได้เปลี่ยน provider/model ของเครื่องมือใดจากเอกสารนี้
+The Blueprint does not require every tool to run at once, configure providers, or change model selections. Tools such as Codex, Antigravity, Colab, Docker, Ollama, and other assistants can fill a role when the user chooses and verifies them; no adapter installation is bundled here.
 
-## 7. Environment contract
+## Environment contract
 
-แต่ละ environment ระบุ:
-- identifier, ประเภท และวิธีเปิด
-- interpreter path หรือชื่อ kernel ที่ยืนยันแล้ว
-- แพ็กเกจ/lockfile ของงาน
-- วันที่และหลักฐานตรวจว่า import และรันตัวอย่างสำเร็จ
-- ผลตรวจ CUDA ของ environment นั้น แยกจาก GPU และ driver ของเครื่อง
+For each environment, record:
 
-ก่อนรัน local ให้ใช้ interpreter ที่ระบุใน registry โดยตรง หรือ kernel ที่จับคู่ไว้ ไม่ใช้ PATH เป็นหลักฐานว่าเป็น environment ที่ถูกต้อง
+- Its ID, type, and activation method.
+- The verified interpreter path or notebook kernel, kept in private configuration when machine-specific.
+- The task's dependency specification or lockfile.
+- The date and evidence of a successful minimal check.
+- Framework-level CUDA availability when relevant, separate from the machine's GPU and driver.
 
-CUDA ใน driver ไม่ได้ยืนยันว่า PyTorch ที่ติดตั้งเป็นรุ่น CUDA และ CUDA ของ Colab เป็นของ runtime บน Cloud
+Use the recorded interpreter or kernel for local execution. A command called `python` on `PATH` may belong to an AI tool rather than the project.
 
-## 8. ขอบเขตข้อมูล
+Driver information does not establish that a particular PyTorch installation can use CUDA. NVIDIA's [CUDA UMD version documentation](https://docs.nvidia.com/deploy/nvidia-smi/index.html#cuda-umd-version) describes driver capability; the framework still needs testing in its selected environment. A cloud notebook's GPU belongs to that cloud runtime, not the user's local machine.
 
-| ประเภท | เจ้าของข้อมูล/ที่เก็บ |
+## Data ownership
+
+| Information | Authoritative location |
 |---|---|
-| เนื้อหาจากอาจารย์ | original/Lectures พร้อม source reference |
-| ข้อกำหนดล่าสุด | current_requirements ใน assignment context |
-| รูปแบบการเขียนเฉพาะงาน | assignment context; กฎทั่วไปอยู่ใน AGENTS.md |
-| บทเรียนปัจจุบัน | course context |
-| ไฟล์ฉบับที่เลือก | artifacts และ revision ใน assignment context |
-| ข้อกำหนดและฉบับเก่า | change history / archive |
-| credentials และตำแหน่งจริงของเครื่อง | configuration ส่วนตัวที่ไม่เข้า Git |
-| บันทึกการส่งงาน | submission evidence เมื่อส่งจริงแล้ว |
+| Original teaching or work material | Original source files and references |
+| Current requirements | `current_requirements` in the selected task record |
+| Task-specific writing and precision rules | Task record; shared defaults remain in instructions |
+| Current lesson or course context | Course record |
+| Selected output | Artifact paths, revisions, and hashes in the task record |
+| Earlier requirements and versions | History or archive |
+| Credentials and real machine paths | Private local configuration |
+| Actual submission | User-confirmed submission evidence |
 
-## 9. ความล้มเหลวและการกลับมาทำต่อ
+A [shared knowledge vault](shared-knowledge.md) can connect reusable notes across work, study, and general interests. It remains a layer of sourced explanations and links, not another task-status database.
 
-- Runtime ใช้งานไม่ได้: บันทึก environment ที่ล้มเหลว ใช้ตัวเลือกที่เตรียมไว้ เช่น Colab โดยไม่แก้ environment อื่นแบบเหมารวม
-- ข้อกำหนดเปลี่ยน: เพิ่ม requirements revision ยกเลิกความพร้อมของฉบับเดิม และตรวจใหม่
-- มีหลายไฟล์ชื่อ final: ใช้ artifact revision และ checksum จาก registry
-- แชตใหม่: เริ่มจาก index/context ล่าสุด ไม่ต้องอ่าน log ทั้งโปรเจ็ค
-- งานหลายเครื่องมือ: ให้ผู้แก้ไฟล์หนึ่งรายรับผิดชอบต่อช่วงงาน ส่งต่อผ่านไฟล์และสถานะ
-- backup: เก็บ source, metadata, requirements และฉบับส่ง ส่วน cache/dependency ที่ติดตั้งใหม่ได้แยกออกตามนโยบายสำรอง
+## Recover and resume
+
+- **Unavailable runtime:** Record what failed and use an authorized alternative if one exists. Avoid broad changes to unrelated environments.
+- **Changed requirement:** Increment its revision, invalidate stale readiness, revise the work, and verify again.
+- **Several files named final:** Use the selected artifact manifest and hashes to identify the intended version.
+- **New chat:** Read the index and focused current context rather than every historical log.
+- **Another AI tool takes over:** Hand off the scope, selected files, actual checks, and remaining work before it edits the same files.
+- **Backup:** Preserve sources, metadata, dependency specifications, and selected outputs. Apply a separate policy to reproducible caches and installed dependencies.
+
+The [data contracts](data-contracts.md) define these state checks; the [workflow guide](workflows.md) shows how to use them.

@@ -1,73 +1,83 @@
 # Engineering decisions
 
-## ADR-001: เริ่มด้วยไฟล์และ index ขนาดเล็ก
+These architectural decision records explain the Blueprint's choices. They describe a practical starting point, not a requirement to use one assistant, folder naming scheme, or hosting service.
 
-**เลือก:** JSON สำหรับสถานะและ Markdown สำหรับคำอธิบาย
+## ADR-001: Start with files and a small index
 
-**เหตุผล:** เปิดอ่านและสำรองได้ง่าย รองรับหลายเครื่องมือ และตรวจ diff ใน Git ได้
+**Decision:** Use JSON for structured state and Markdown for explanations.
 
-**ข้อแลกเปลี่ยน:** ต้องระวังหลายเครื่องมือเขียนพร้อมกัน จึงกำหนดผู้แก้ไฟล์หลักหนึ่งราย หากมีผู้ใช้หลายคนแก้พร้อมกันมากจึงค่อยพิจารณาฐานข้อมูลและ transaction
+**Reason:** Records are readable, easy to back up, usable by different tools, and reviewable as Git diffs.
 
-## ADR-002: แยกข้อมูลปัจจุบันจากประวัติ
+**Trade-off:** Concurrent writers need coordination. Start with one responsible writer per edit batch; consider a database and transactions when actual collaboration needs justify them.
 
-**เลือก:** current_requirements เป็นข้อกำหนดชุดเดียว ส่วนคำสั่งเก่าอยู่ history
+## ADR-002: Separate current state from history
 
-**เหตุผล:** ลดการใช้โจทย์เก่าทับคำแก้ไขใหม่ และลดบริบทที่ต้องอ่าน
+**Decision:** Keep one current requirements set and retain superseded instructions in history.
 
-**ข้อแลกเปลี่ยน:** เมื่อแก้โจทย์ต้องอัปเดต current state และบันทึกเหตุการณ์ให้ครบ
+**Reason:** This reduces the risk of restoring outdated instructions and keeps the context needed to resume work small.
 
-## ADR-003: ผูกผลตรวจกับ revision สองชนิด
+**Trade-off:** A confirmed correction must update current state and record the change together.
 
-**เลือก:** requirements_revision และ artifact_revision
+## ADR-003: Bind verification to two revisions
 
-**เหตุผล:** PDF ที่ตรวจผ่านอาจหมดความพร้อมเมื่อโจทย์เปลี่ยน หรือเมื่อแก้เนื้อหาหลังตรวจ
+**Decision:** Track `requirements_revision` and `artifact_revision`, together with content hashes.
 
-**ข้อแลกเปลี่ยน:** มี metadata เพิ่มเล็กน้อย แต่ตรวจพบผลรับรองที่ไม่ตรงฉบับได้
+**Reason:** A reviewed file can become stale when the task changes or its content is edited after review.
 
-## ADR-004: แยก environment ของงานจาก environment ของเครื่องมือ AI
+**Trade-off:** A little more metadata is needed, but mismatched evidence can be rejected.
 
-**เลือก:** ระบุ interpreter/kernel ต่อโปรเจ็ค และเก็บหลักฐานการทดสอบ
+## ADR-004: Separate project and AI-tool runtimes
 
-**เหตุผล:** คำสั่ง python อาจชี้ environment ของ agent ซึ่งต่างจาก Notebook และการมี CUDA driver ไม่เท่ากับ PyTorch ใช้ CUDA ได้
+**Decision:** Identify the interpreter or kernel for each project and retain evidence of relevant checks.
 
-**ข้อแลกเปลี่ยน:** มี environment หลายชุด จึงต้องมี registry และติดตั้งเฉพาะสิ่งที่งานนั้นใช้
+**Reason:** An unqualified `python` may use a different environment from the notebook or project. Machine-level GPU information is separate from framework availability in that environment.
 
-## ADR-005: มีผู้ประสานงานหลักหนึ่งราย
+**Trade-off:** Several environments require clear references and task-specific dependency management.
 
-**เลือก:** ให้ Codex/ผู้เรียนกำหนด scope และผู้แก้ไฟล์หลัก แล้วใช้เครื่องมืออื่นตามบทบาท
+## ADR-005: Name a responsible writer
 
-**เหตุผล:** ลดการแก้ไฟล์ชนกัน และแยกต้นตอของผลลัพธ์ได้
+**Decision:** Let the user and coordinating assistant define scope and file ownership for each edit batch.
 
-**ข้อแลกเปลี่ยน:** ไม่ได้ใช้ทุก agent พร้อมกัน การทำงานขนานเพิ่มเมื่อมีงานแยกชัดและได้รับมอบหมาย
+**Reason:** Clear ownership reduces conflicting edits and helps trace results to their inputs and checks.
 
-## ADR-006: ใช้ path เดิมก่อนแล้วค่อยปรับ
+**Trade-off:** Not every assistant writes at once. Parallel work is useful when tasks and files can be separated; shared files still require serialization.
 
-**เลือก:** ให้ index ชี้โฟลเดอร์เดิม และเริ่มโครงสร้างใหม่กับงานใหม่ก่อน
+## ADR-006: Preserve working paths during adoption
 
-**เหตุผล:** Notebook, Streamlit pages และ LaTeX อาจมี path ที่อ้างต่อกันอยู่
+**Decision:** Point the index to existing folders and introduce the proposed layout with new tasks first.
 
-**ข้อแลกเปลี่ยน:** ช่วงเปลี่ยนผ่านจะมีโครงสร้างเก่าและใหม่อยู่ร่วมกัน ต้องบันทึก mapping เมื่อย้าย
+**Reason:** Notebooks, multipage applications, document sources, and scripts may depend on existing paths.
 
-## ADR-007: แยก repository ความรู้ออกจาก workspace ส่วนตัว
+**Trade-off:** Old and new layouts may coexist. A later migration needs an explicit path mapping and verification.
 
-**เลือก:** แชร์ blueprint และข้อมูลจำลองใน repository เฉพาะ
+## ADR-007: Separate the public Blueprint from private work
 
-**เหตุผล:** ทำให้คนอื่นนำไปปรับใช้ได้ และไม่พารายงานนักศึกษา/ข้อมูลบริการส่วนตัวไปด้วย
+**Decision:** Publish selected documentation, code, and fictional examples in a dedicated repository.
 
-**ข้อแลกเปลี่ยน:** เอกสารสาธารณะต้องอัปเดตเมื่อวิธีทำงานเปลี่ยน โดยเก็บรายละเอียดเฉพาะเครื่องไว้ใน local overlay
+**Reason:** Other people can adapt the workflow without receiving private coursework, reports, credentials, or service configuration.
 
-## ADR-008: ยังไม่สร้างบริการ orchestrator เพิ่ม
+**Trade-off:** Public examples need maintenance as the design evolves. Machine-specific details remain in private configuration.
 
-**เลือก:** เริ่มด้วยเอกสารและ reference checker
+## ADR-008: Do not require an orchestration service
 
-**เหตุผล:** จุดที่ต้องแก้ก่อนคือบริบท ฉบับปัจจุบัน และ environment ไม่ใช่ปริมาณ AI agent
+**Decision:** Start with documented steps and a reference checker.
 
-**ข้อแลกเปลี่ยน:** บางขั้นยังทำด้วยผู้เรียน/Codex เมื่อมีขั้นตอนซ้ำที่วัดได้จึงค่อยทำ CLI/automation โดยรักษา contract เดิม
+**Reason:** The first problems to solve are context, versions, evidence, and runtime selection. Adding more agents does not by itself solve those problems.
 
-## ADR-009: ใช้ MIT สำหรับชุด Blueprint
+**Trade-off:** Some steps remain manual. Automate a repeatable step after its inputs, criteria, and benefit are clear, while retaining the same data contracts.
 
-**เลือก:** [MIT License](../LICENSE) สำหรับโค้ด เอกสาร และตัวอย่างที่โครงการมีสิทธิ์อนุญาตให้ใช้
+## ADR-009: Use MIT for the Blueprint
 
-**เหตุผล:** เจ้าของงานเลือกให้คนอื่นนำชุดนี้ไปใช้ แก้ไข และต่อยอดได้ง่าย รวมถึงการใช้เชิงพาณิชย์ โดยคงประกาศลิขสิทธิ์และข้อความ License ตามเงื่อนไขมาตรฐาน
+**Decision:** Apply the [MIT License](../LICENSE) to material the project has the right to license.
 
-**ข้อแลกเปลี่ยน:** MIT ไม่บังคับให้ผู้รับเปิดซอร์สส่วนที่พัฒนาต่อหรือส่งการแก้กลับให้โครงการ ใช้ชื่อ `AI-assisted Workflow contributors` ในประกาศเพื่อไม่ใส่ข้อมูลส่วนตัว การเลือกนี้ไม่เปลี่ยนสิทธิ์ของบุคคลอื่นและไม่ใช่การอนุญาตเผยแพร่ workspace ส่วนตัวหรือสร้าง remote
+**Reason:** It permits reuse, modification, and redistribution, including commercial use, under its notice requirements.
+
+**Trade-off:** MIT does not require downstream changes to be published or contributed back. Third-party material retains its own rights, and a public license does not authorize publishing a private workspace.
+
+## ADR-010: Separate shared knowledge from operational state
+
+**Decision:** Optionally connect projects through sourced Markdown notes, with a shared portal and domain-specific entry points.
+
+**Reason:** Concepts and lessons can be reused across work, study, and personal interests while each source project retains ownership of current requirements and status.
+
+**Trade-off:** Shared notes need one coordinated writer or a single agreed claim registry. Existing indexes and source paths must be preserved. The [shared knowledge guide](shared-knowledge.md) documents the pattern; no file-locking or synchronization service is bundled.
